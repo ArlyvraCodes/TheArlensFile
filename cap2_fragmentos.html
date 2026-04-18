@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mundo lejano — Fragmentos de Luz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --black:#03050a;--deep:#070a12;--charcoal:#0d1220;--slate:#1c2a40;
+      --steel:#2e4060;--mist:#7a90b0;--silver:#b0c4de;--moonwhite:#dce8f5;
+      --white:#f0f6ff;--blue:#4a90d9;--blue-dim:#2e6aab;--blue-glow:#6fb3f5;
+      --font-body:'Playfair Display',Georgia,serif;
+      --font-label:'Cinzel',Arial,sans-serif;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--black);color:var(--moonwhite);font-family:var(--font-body);overflow-x:hidden;}
+    ::-webkit-scrollbar{width:5px;}
+    ::-webkit-scrollbar-track{background:var(--deep);}
+    ::-webkit-scrollbar-thumb{background:var(--blue-dim);}
+
+    /* PROGRESS */
+    #progress-bar{
+      position:fixed;top:0;left:0;height:3px;width:0%;
+      background:linear-gradient(to right,var(--blue-dim),var(--blue-glow),var(--silver));
+      z-index:9999;transition:width 0.08s linear;
+      box-shadow:0 0 10px rgba(111,179,245,0.8),0 0 22px rgba(111,179,245,0.35);
+    }
+
+    /* BACK TO TOP */
+    #back-top{
+      position:fixed;bottom:2.2rem;right:2.2rem;width:48px;height:48px;
+      background:#070a12;border:1.5px solid var(--blue);
+      color:var(--moonwhite);font-size:1rem;display:flex;align-items:center;
+      justify-content:center;cursor:pointer;z-index:500;opacity:0;
+      transform:translateY(20px);transition:opacity 0.4s,transform 0.4s,box-shadow 0.3s;
+      text-decoration:none;font-family:var(--font-label);
+    }
+    #back-top.visible{opacity:1;transform:translateY(0);}
+    #back-top:hover{box-shadow:0 0 18px rgba(111,179,245,0.6);background:var(--blue-dim);}
+
+    /* STARS */
+    #stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.55;}
+
+    /* NAV */
+    nav{
+      position:sticky;top:0;z-index:200;
+      background:rgba(3,5,10,0.96);border-bottom:1px solid rgba(74,144,217,0.18);
+      backdrop-filter:blur(14px);
+      display:flex;align-items:center;justify-content:space-between;padding:0.85rem 2.5rem;
+    }
+    .nav-left{display:flex;align-items:center;gap:1.5rem;}
+    .nav-back{
+      font-family:var(--font-label);font-size:0.62rem;letter-spacing:0.28em;
+      text-transform:uppercase;color:var(--mist);text-decoration:none;
+      display:flex;align-items:center;gap:0.5rem;transition:color 0.3s;
+    }
+    .nav-back:hover{color:var(--white);}
+    .nav-sep{color:var(--slate);font-size:0.7rem;}
+    .nav-title{
+      font-family:var(--font-body);font-style:italic;font-size:0.95rem;
+      color:var(--silver);opacity:0.75;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;
+    }
+    .nav-chap{
+      font-family:var(--font-label);font-size:0.6rem;letter-spacing:0.35em;
+      text-transform:uppercase;color:var(--blue);opacity:0.8;
+    }
+
+    /* COVER / PORTADA */
+    #cover{
+      position:relative;height:52vh;min-height:340px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      overflow:hidden;z-index:1;
+    }
+    .cover-bg{
+      position:absolute;inset:0;
+      background:radial-gradient(ellipse at 50% 0%,rgba(28,65,140,0.45) 0%,transparent 60%),
+        linear-gradient(180deg,#03050d 0%,#060c1a 50%,#03050d 100%);
+      z-index:0;
+    }
+    .cover-vignette{
+      position:absolute;inset:0;
+      background:radial-gradient(ellipse at 50% 50%,transparent 20%,rgba(2,3,10,0.55) 65%,rgba(2,3,10,0.98) 100%);
+      z-index:1;pointer-events:none;
+    }
+    /* Mini star watermark on cover */
+    .cover-star{
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      z-index:2;pointer-events:none;opacity:0.18;
+      animation:coverStarPulse 5s ease-in-out infinite;
+    }
+    @keyframes coverStarPulse{
+      0%,100%{opacity:0.14;filter:drop-shadow(0 0 10px rgba(111,179,245,0.3));}
+      50%{opacity:0.26;filter:drop-shadow(0 0 24px rgba(111,179,245,0.55));}
+    }
+    .cover-content{
+      position:relative;z-index:3;text-align:center;padding:2rem;
+      animation:coverIn 1.4s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes coverIn{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+    .cover-series{
+      font-family:var(--font-label);font-size:0.6rem;letter-spacing:0.5em;
+      text-transform:uppercase;color:var(--blue);opacity:0.8;margin-bottom:0.8rem;
+    }
+    .cover-num{
+      font-family:var(--font-label);font-size:0.65rem;letter-spacing:0.45em;
+      text-transform:uppercase;color:var(--mist);margin-bottom:0.6rem;opacity:0.75;
+    }
+    .cover-title{
+      font-family:var(--font-body);font-style:italic;font-weight:700;
+      font-size:clamp(2.4rem,6vw,4.2rem);color:var(--white);line-height:1.05;
+      text-shadow:0 2px 30px rgba(1,3,12,0.99),0 0 50px rgba(111,179,245,0.28);
+      margin-bottom:0.5rem;
+    }
+    .cover-subtitle{
+      font-family:var(--font-body);font-style:italic;font-size:0.95rem;
+      color:var(--mist);opacity:0.75;
+    }
+
+    /* READER */
+    #reader{
+      position:relative;z-index:2;
+      max-width:720px;margin:0 auto;
+      padding:4rem 2.5rem 8rem;
+    }
+
+    /* Chapter body */
+    .chapter-body > p:first-child::first-letter{
+      font-family:var(--font-body);font-style:italic;font-weight:700;
+      font-size:4.5rem;line-height:0.75;float:left;
+      margin:0.1em 0.12em 0 0;
+      color:var(--blue-glow);
+      text-shadow:0 0 20px rgba(111,179,245,0.6),0 0 40px rgba(74,144,217,0.3);
+    }
+    .chapter-body p{
+      font-size:1.1rem;line-height:2;color:var(--moonwhite);
+      margin-bottom:1.7rem;font-style:italic;opacity:0.9;
+    }
+    .chapter-body p em{color:var(--blue-glow);font-style:normal;}
+    .scene-break{
+      text-align:center;color:var(--blue);opacity:0.45;
+      margin:2.8rem 0;font-size:0.9rem;letter-spacing:0.7em;
+      font-family:var(--font-label);
+      clear:both;
+    }
+    .pull-quote{
+      border-left:2px solid var(--blue);
+      margin:2.5rem 0;padding:1.2rem 2rem;
+      background:rgba(74,144,217,0.06);
+      font-size:1.15rem;font-style:italic;
+      color:var(--silver);line-height:1.75;
+      clear:both;
+    }
+
+    /* Chapter end */
+    .chapter-end{
+      text-align:center;padding:3.5rem 2rem 1rem;
+      border-top:1px solid rgba(74,144,217,0.15);
+      margin-top:3rem;
+    }
+    .star-row{
+      font-size:1.1rem;color:var(--blue-glow);opacity:0.5;
+      letter-spacing:1rem;margin-bottom:1.2rem;
+      animation:starRowPulse 3s ease-in-out infinite;
+    }
+    @keyframes starRowPulse{0%,100%{opacity:0.35;}50%{opacity:0.7;}}
+    .chapter-end p{
+      font-family:var(--font-body);font-style:italic;
+      color:var(--mist);font-size:0.98rem;line-height:1.85;
+    }
+
+    /* CHAPTER NAV */
+    .chapter-nav{
+      display:flex;justify-content:space-between;align-items:center;
+      margin-top:4rem;padding-top:2rem;
+      border-top:1px solid rgba(74,144,217,0.15);
+      gap:1rem;flex-wrap:wrap;
+    }
+    .chap-nav-btn{
+      font-family:var(--font-label);font-size:0.63rem;letter-spacing:0.25em;
+      text-transform:uppercase;color:var(--mist);background:transparent;
+      border:1px solid rgba(74,144,217,0.25);padding:0.6rem 1.3rem;
+      cursor:pointer;text-decoration:none;transition:all 0.3s;
+      display:flex;align-items:center;gap:0.5rem;
+    }
+    .chap-nav-btn:hover{color:var(--white);border-color:var(--blue);background:rgba(74,144,217,0.1);}
+    .chap-nav-btn.disabled{opacity:0.2;pointer-events:none;}
+    .btn-home{
+      font-family:var(--font-label);font-size:0.63rem;letter-spacing:0.25em;
+      text-transform:uppercase;color:var(--blue-glow);background:transparent;
+      border:1px solid rgba(74,144,217,0.35);padding:0.6rem 1.3rem;
+      cursor:pointer;text-decoration:none;transition:all 0.3s;
+    }
+    .btn-home:hover{color:var(--white);border-color:var(--blue);background:rgba(74,144,217,0.1);}
+
+    @media(max-width:600px){
+      #reader{padding:3rem 1.3rem 6rem;}
+      nav{padding:0.75rem 1.3rem;}
+      .nav-title{display:none;}
+    }
+
+    /* PRELUDE / ARCHIVO */
+    .chapter-prelude {
+      position: relative; z-index: 2;
+      max-width: 720px; margin: 0 auto;
+      padding: 2.8rem 2.5rem 0;
+    }
+    .prelude-header {
+      display: flex; align-items: center; gap: 1rem; margin-bottom: 1.4rem;
+    }
+    .prelude-label {
+      font-family: var(--font-label); font-size: 0.58rem; letter-spacing: 0.55em;
+      text-transform: uppercase; color: var(--blue); opacity: 0.75;
+      flex-shrink: 0;
+    }
+    .prelude-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(to right, rgba(74,144,217,0.35), rgba(74,144,217,0.08));
+    }
+    .prelude-header .prelude-line { background: linear-gradient(to right, rgba(74,144,217,0.08), rgba(74,144,217,0.35)); }
+    .prelude-body {
+      border-left: 2px solid rgba(74,144,217,0.25);
+      padding: 1rem 1.5rem 1rem 1.8rem;
+      background: rgba(74,144,217,0.04);
+      margin-bottom: 1.4rem;
+    }
+    .prelude-text {
+      font-family: var(--font-body); font-style: italic;
+      font-size: 0.97rem; line-height: 1.85;
+      color: var(--mist); opacity: 0.88;
+    }
+    .prelude-text em { color: var(--silver); }
+    .prelude-footer {
+      display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0;
+    }
+    .prelude-footer .prelude-line {
+      background: linear-gradient(to right, rgba(74,144,217,0.08), rgba(74,144,217,0.3));
+    }
+    .prelude-footer .prelude-line:last-child {
+      background: linear-gradient(to left, rgba(74,144,217,0.08), rgba(74,144,217,0.3));
+    }
+    .prelude-close {
+      font-size: 0.7rem; color: var(--blue-glow); opacity: 0.5; flex-shrink: 0;
+      animation: prelClose 4s ease-in-out infinite;
+    }
+    @keyframes prelClose { 0%,100%{opacity:0.35;} 50%{opacity:0.75;} }
+
+    /* Divider between prelude and reader body */
+    .prelude-divider {
+      max-width: 720px; margin: 2.2rem auto 0;
+      display: flex; align-items: center; gap: 1.2rem;
+      padding: 0 2.5rem;
+    }
+    .prelude-divider::before,
+    .prelude-divider::after {
+      content: ""; flex: 1; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(74,144,217,0.22), transparent);
+    }
+    .prelude-divider-star {
+      font-size: 0.65rem; color: var(--blue); opacity: 0.4;
+    }
+
+  </style>
+</head>
+<body>
+  <canvas id="stars-canvas"></canvas>
+  <div id="progress-bar"></div>
+  <a href="#cover" id="back-top" title="Volver arriba">↑</a>
+
+  <nav>
+    <div class="nav-left">
+      <a href="FragmentosDeLuz.html" class="nav-back">← Fragmentos de Luz</a>
+      <span class="nav-sep">|</span>
+      <span class="nav-title">Mundo Lejano</span>
+    </div>
+    <span class="nav-chap">Cap. II</span>
+  </nav>
+
+  <!-- COVER -->
+  <div id="cover">
+    <div class="cover-bg"></div>
+    <div class="cover-vignette"></div>
+    <!-- Mini star watermark -->
+    <svg class="cover-star" width="320" height="420" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="csg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(180,220,255,0.8)"/>
+          <stop offset="100%" stop-color="rgba(74,144,217,0)"/>
+        </radialGradient>
+        <filter id="csf" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="7"/>
+        </filter>
+      </defs>
+      <ellipse cx="200" cy="260" rx="120" ry="145" fill="rgba(74,144,217,0.1)" filter="url(#csf)"/>
+      <path d="M200,18 C204,120 222,222 262,254 L382,258 C276,262 204,280 200,362 C196,280 128,262 18,258 L138,254 C178,222 196,120 200,18 Z" fill="url(#csg)" opacity="0.9"/>
+      <path d="M200,18 C204,120 222,222 262,254 L340,88 C296,196 208,232 200,260 C192,232 104,196 60,88 L138,254 C178,222 196,120 200,18 Z" fill="rgba(190,228,255,0.35)" opacity="0.7"/>
+      <path d="M200,362 C196,280 128,262 18,258 L60,432 C102,326 192,290 200,260 C208,290 298,326 340,432 L382,258 C276,262 204,280 200,362 Z" fill="rgba(190,228,255,0.35)" opacity="0.7"/>
+    </svg>
+    <div class="cover-content">
+      <p class="cover-series">Aeterni Saga</p>
+      <p class="cover-num">Arlen's File</p>
+      <h1 class="cover-title">Mundo Lejano</h1>
+      <p class="cover-subtitle">Capitulo II</p>
+    </div>
+  </div>
+
+
+  <!-- ARCHIVO / PREÁMBULO -->
+  <div class="chapter-prelude">
+    <div class="prelude-header">
+      <span class="prelude-label">Archivo</span>
+      <div class="prelude-line"></div>
+    </div>
+    <div class="prelude-body">
+      <p class="prelude-text"><em>La disminución de poder no será interpretada como derrota,
+sino como estrategia en transformación.
+Si el cuerpo limita la luz, la mente duplica su vigilancia.
+<p>—Artículo 19. Estatuto de las Milicias Celestiales. 
+<p>Escrito hecho por el Príncipe Michael MorningStar.</em></p>
+    </div>
+    <div class="prelude-footer">
+      <div class="prelude-line"></div>
+      <span class="prelude-close">✦</span>
+      <div class="prelude-line"></div>
+    </div>
+  </div>
+
+  <div class="prelude-divider"><span class="prelude-divider-star">✦</span></div>
+
+  <!-- READER -->
+  <article id="reader">
+    <div class="chapter-body">
+
+          <p>La luz fue retirada. No era un castigo, tampoco un abandono. Pero sí un descenso.</p> 
+<p>Una caída.</p>
+<p>Durante varios instantes lo único que reinaba era la oscuridad, una que aunque no era hostil, era absoluta. 
+Las sanciones en su cuerpo no terminaban de acoplarse, el cambio de la transición se sentía en cada fibra de si. La estabilidad fue removida y el descenso se abrió paso. Su esencia empezaba a ser contenida, su inmensidad comprimida, su eternidad limitada y su forma moldeada.</p>
+<p>El sonido de un trueno partió el cielo humano con ferocidad y con él, el plano mortal lo reclamó. El aire se coló dentro de sus pulmones sin autorización, una expansión algo dolorosa de manera inesperada, el peso de la gravedad se volvía absoluta y lo reconocía.</p>
+<p>La tierra lo recibió.</p>
+<p>Su cuerpo cayó del cielo atravesando las nubes como un rayo sin origen. El impacto no fue glorioso, no hubo coros, no hubo himnos: solo una lluvia densa e impiadosa que golpeaba el suelo con una intensidad que propagaba la legitimidad.</p>
+<p>Durante unos instantes, permaneció en silencio e inmovil; evaluando su alrededor como si se tratara de un campo de entrenamiento. Sus párpados pesaban pero se obligó a mantenerse consciente; el cielo permanecía de un color oscuro, las ramas fragmentadas que se mecían al ritmo del viento sobre el. El cuerpo respondió a señales nuevas.</p>
+<p>Dolor.</p>
+<p>No lo suficiente para hacer que se quejase, pero sí lo suficientemente presente para incomodar. Su espalda le ardía, sus costillas protestaban con cada respiración y sus músculos temblaban con cada movimiento que él ejercía.</p>
+<p>Michael miró a sus alrededores, registrando cada detalle de este nuevo panorama. Temperatura irregular, sistema nervioso activo y claro, su limitación física estaba confirmada. Sus manos tocaron el suelo prestando atención a las sensaciones percibidas, húmeda, orgánica, imperfecta. Viva.</p>
+<p>Sus manos permanecían manchadas de barro, pero un detalle le hizo observar con detenimiento.</p>
+<p>Sangre roja.</p>
+<p>No dorada como la que originalmente poseía, no se sorprendió, era coherente. El plano mortal exige coherencia con los de su especie. El agua seguía descendiendo empapando su vestimenta; dejó salir un pequeño suspiro volviendo su vista al bosque, no había criaturas cercanas, se sentía como si la creación contuviera el aliento ante su presencia.</p>
+<p>Michael se incorporó durante unos instantes aún con el dolor en su cuerpo,  Intentó extender sus alas siin respuestas, no estaban presentes, pero eso no significaba que no existían, solo que estaban siendo contenidas; su esencia no había desaparecido, solo había sido velada.</p>
+<div class="pull-quote"> — Sin alas para volar, ni poder para transportarse —Dijo con suavidad—. Sería mejor si no me hubieran limitado.</div>
+<p>Pronto empezó a levantarse del suelo, dando un pequeño suspiro por la contención de su poder. No le daría tanta importancia, tenía que adaptarse al mundo humano lo más pronto posible.</p>
+<div class="pull-quote">— Sin alas, con restricciones de poder —Empezó a enlistar las cosas que le habían impuesto— Y en un lugar de la tierra que desconozco y no puedo escanear de la misma forma que antes.</div>
+<p>Esto era un desajuste estratégico, No había delimitación de amenaza. Solo una palabra.</p>
+<div class="pull-quote">« Recordar »</div>
+<div class="pull-quote">— Recordar… —Murmuró para sí, empezando a avanzar—. ¿Se recuerda la posibilidad… o el destino?</div>
+<p>El eco de la palabra persistía como una orden no impuesta, ¿A qué se refería? ¿Qué debía recordar? ¿Un enemigo? ¿Una profecía? ¿El pasado...? Su mirada se dirigió hacia el horizonte oscuro. La lluvia poco a poco empezó a ceder, bajando la intensidad de tu tormento y dejando ver con más claridad el bosque que le rodeaba, no había un sendero definido, la tierra ascendía en una pendiente irregular cubierta por raíces expuestas y piedras ocultas bajo las hojas y el lodo.</p>
+<div class="pull-quote">« Entre más altura más visibilidad »</div>
+<p>Michael empezó a avanzar sin prisas hacia la montaña, la elevación le permitirá observar con más atención el lugar donde se encontraba. Sus pasos eran medidos, el dolor de su espalda persistía como una advertencia constante de su nueva condición; la herida no era profunda, pero no se regenera como él estaba acostumbrado, la sangre continuaba recorriendo su espalda, en algunos momentos dejando un leve rastro sobre la tierra húmeda.</p>
+<p>El horizonte comenzaba a desaparecer la oscuridad de la noche, la tenue línea de luz que indicaba la llegada del amanecer empezaba a hacerse presente. Elevo su mirada nuevamente al cielo centrándose en su estrella: Resplandecía con fuerza, destellos azules y dorados brotaban de ella con majestuosidad, pronto se ocultaría con la llegada del sol.</p>
+<div class="pull-quote">— Creí que también te habían escondido —Susurro al cielo— Me equivoque.</div>
+<p>El viento pareció responderle moviendo las copas altas de los árboles cuando él alcanzó la cima de la colina, el bosque se abrió lo suficiente para revelar, a lo lejos, una ciudad humana, los altos edificios, las luces artificiales, ruido y cierta contaminación lumínica y ecológica. Michael observó con detenimiento.</p>
+<p>El alba empezaba a teñir el cielo con una luz pálida, todo estaba silencioso, no había sonido más allá de los cantos de los ruiseñores y el mecer de las hojas. Hasta que la variación de la atmósfera cambió.</p>
+<p>Dos presencias se manifestaron detrás de él, no con estruendo o proclamación, solo con respeto.</p>
+<div class="pull-quote">— El amanecer sigue intacto incluso después de eones —Gabriel fue el primero en hablar con una suavidad contenida— Sigue brillando a la par de las estrellas.</div>
+<p>Michael no se movió de inmediato. Hasta que Raphael dio un paso al frente observando el rastro de sangre aún húmeda en la espalda y parte posterior de la vestimenta de él.</p>
+<div class="pull-quote">— La belleza no es sinónimo de seguridad.</div>
+<div class="pull-quote">— Ni la resistencia lo es de prudencia. —le respondió Raphael con seriedad.</div>
+<p>Michael giro y miro a sus hermanos manteniendo la compostura, Gabriel miraba a sus hermanos mayores con un poco de seriedad aunque quisiera ser un poco más suave. Raphael en cambio, se acercó a Michael sin permiso poniéndose frente a él.</p>
+<div class="pull-quote">— Nos informaron de tu nueva misión... sin orden explícita —Continuó Raphael— Sin sistema militar que seguir.</div>
+<div class="pull-quote">— Creo que la presencia sin propósito es una exposición innecesaria.</div>
+<div class="pull-quote">— Y la exposición de heridas abiertas es negligencia.</div>
+<p>El silencio que siguió no fue hostil, pero sí tenso, Michael le sostuvo la mirada a Raphael.</p>
+<div class="pull-quote">— Es una herida superficial.</div>
+<div class="pull-quote">— Superficial no significa irrelevante —Replicó Raphael con firmeza serena—. En territorio desconocido la integridad es prioridad estratégica.</div>
+<p>Michael no respondió. Raphael interpretó el silencio como resistencia, lo que causó que su ceño se frunciera y se acercara nuevamente, Michael no retrocedió al ver que Raphael extendía su mano hacia las zonas lesionadas. Su toque dejó resplandecer una luz dorada con algunos destellos verdes, las heridas comenzaron a cerrarse con precisión.</p>
+<div class="pull-quote">— Michael, la disciplina no excluye el cuidado —Añadió con una voz más suave—. No estamos ante el trono.</div>
+<p>Michael mantuvo la postura erguida, aunque un leve ajuste en su respiración reveló que estaba atento a las indicaciones de su hermano. Gabriel se encontraba mirando la escena con atención, sin atreverse a intervenir.</p>
+<div class="pull-quote">— Estás indeciso —Afirmó.</div>
+<div class="pull-quote">— Estoy evaluando.</div>
+<p>Raphael suspiro con algo de resignación, pronto retiró la mano cuando las heridas terminaron de cerrarse sin marca o cicatriz visible. Michael examinó el resultando suavisando su mirada, aunque pronto volvió su vista hacia la ciudad.</p>
+<div class="pull-quote">—No puedes ocultar la vacilación ante quienes comparten tu esencia —dijo finalmente—. La contención no es invulnerabilidad.</div>
+<div class="pull-quote">— No es de tu incumbencia.</div>
+<div class="pull-quote">— ¿No lo es? —Cuestiono.</div>
+<p>El silencio volvió a instalarse, Gabriel suspiro un poco acercándose a sus hermanos mayores intentando calmar el ambiente.</p>
+<div class="pull-quote">— El descenso debió ser duro —Cambio el tema mientras se ponía entre ellos— Y dado a que Michael no tiene una orden específica, creo que lo mejor sería que se adapte a este nuevo entorno lo antes posible.</div>
+<p>Michael y Raphael desviaron la mirada al mismo tiempo. Michael no se atrevió a responder de inmediato, mientras que Raphael fijó su mirada en la ciudad. Gabriel sostuvo la mirada de ambos unos segundos más, como si midiera cuidadosamente cada palabra antes de pronunciarla.</p>
+<div class="pull-quote">— Si te adaptas podrías comprender mejor este nuevo sitio —Continuo.</div>
+<div class="pull-quote">— Comprender implica interactuar —Respondió Raphael.</div>
+<p>El alba del amanecer comenzaba a teñir los ventanales de los edificios.</p>
+<div class="pull-quote">— Interactuar —Murmuro Michael repitiendo la palabra.</div>
+<p>Gabriel asintió con una leve sonrisa, extendió sus alas y se colocó frente a sus hermanos. Michael y Raphael no protestaron, solo siguieron escuchándolo.</p>
+<div class="pull-quote">— Bueno, claramente ya no viven refugiándose en cuevas ni dependen del fuego para sobrevivir —Continuó fijando su vista a la ciudad— Los humanos han aprendido a construir y a comunicarse de una forma que es impresionante si vemos el origen y el presente.</div>
+<p>Michael guardó nuevamente silencio, sus ojos recorrían los edificios lejanos, las avenidas aún vacías, los vehículos aislados que comenzaban a desplazarse como pequeños organismos mecánicos. No era el ruido lo que le incomodaba.</p>
+<p>Era la multiplicidad.</p>
+<p>Demasiadas señales, demasiadas voluntades y demasiadas vidas simultáneas. Raphael observó el leve ajuste en la mandíbula de su hermano. Un gesto mínimo, pero suficiente.</p>
+<div class="pull-quote">— No funciona igual —Contestó.</div>
+<div class="pull-quote">— Porque no estás diseñado para abarcarlo todo desde aquí —respondió Raphael con calma firme—. Ese es el punto.</div>
+<p>Gabriel dio un paso adelante, posicionándose de forma natural entre ambos sin imponerse. El viento movía su vestidura con ligereza, como si incluso el aire le respondiera con docilidad.</p>
+<div class="pull-quote">— Padre no te envió sin previsión —dijo—. No fue un descenso improvisado.</div>
+<p>Michael desvió finalmente la mirada hacia Gabriel, quien sostuvo su atención sin tensión.</p>
+<div class="pull-quote">— Ya tienes una identidad asignada, todos tenemos —Pensó un poco— O al menos nosotros 3 si tenemos una.</div>
+<div class="pull-quote">— Explica.</div>
+<div class="pull-quote">— Sabes que Padre está presente incluso cuando no lo vemos, más de mil pasos adelante de lo que creemos —Continuó Gabriel—. Así que supongo que tenía previsto que en algún momento ocupamos descender a la tierra, no dejaría a sus hijos solos.</div>
+<div class="pull-quote">— Eso no responde mi pregunta.</div>
+<p>Raphael cruzó los brazos un momento dirigiendo una mirada discreta a Michael, no continuó. Gabriel noto el pequeño gesto antes de continuar explicando.</p>
+<div class="pull-quote">— Padre nos ha proporcionado una vida funcional y activa en el mundo humano —Explicó alzando sus manos, generando una luz dorada que proyectaba la información de los tres como si siempre hubieran sido humanos—. Documentos, registros civiles, propiedades, cuentas activas… técnicamente todo lo que reina a los humanos.</div>
+<div class="pull-quote">— Como una jerarquía —Murmuró.</div>
+<div class="pull-quote">— Con la diferencia de que ellos se clasifican por "ingresos" —Continuó Raphael— mientras que nosotros con origen y poder.</div>
+<div class="pull-quote">— Sigo sin entender el propósito de la misión —Admitió después de un momento de silencio— Mi instrucción fue "Recordar", pero no comprendo qué debo recordar.</div>
+<p>Raphael lo miró de frente.</p>
+<div class="pull-quote">— Entonces no actúes como un general.</div>
+<p>El comentario no fue hostil, pero sí directo y sin vacilaciones. Michael sostuvo su mirada con el ceño fruncido ligeramente.</p>
+<div class="pull-quote">— ¿Y cómo debería actuar?</div>
+<div class="pull-quote">— Aquí abajo, Michael, la mayoría de las batallas no se libran con espadas —Intervino Gabriel—. Se libran con palabras, con esos pequeños silencios o con decisiones que después cambian el rumbo de sus vidas.</div>
+<p>Raphael no respondió enseguida, viendo el amanecer y a la estrella que empezaba a disiparse por la luz. Pronto una brisa, esta vez más fría, se abrió paso entre ellos. Michael giró apenas el rostro, analizando un cambio sutil en la presión atmosférica.</p>
+<p>Raphael lo notó también.</p>
+<div class="pull-quote">— Saben que estamos aquí. Les disgusta nuestra presencia.</div>
+<p>Michael asintió mirando un poco a sus alrededores frunciendo el ceño cada que sentía los residuos de aquellos parásitos.</p>
+<div class="pull-quote">— Alguien debe evitar que intimide a la primera persona que le hable —Comentó Gabriel con algo de gracia.</div>
+<p>Raphael dejó unos segundos su mirada fría soltando una pequeña risa antes de incorporarse, mientras que Michael lo miró de reojo.</p>
+<div class="pull-quote">— No intimido.</div>
+<p>Raphael y Gabriel intercambiaron una mirada breve.</p>
+<div class="pull-quote">— Claro que no —dijeron casi al unísono.</div>
+<p>Suspiro sin querer discutir con sus hermanos en algo que claramente no iba a ganar. El silencio posterior se instaló durante breves segundos, ya sin estar necesariamente tenso e incómodo. Gabriel guardó sus alas antes de ponerse al lado de Raphael y volver a hablar.</p>
+<div class="pull-quote">— Descenderé con más frecuencia —informó con naturalidad—. La adaptación requiere contexto... no todo es observable desde la altura.</div>
+<p>Michael lo miró de reojo.</p>
+<div class="pull-quote">— ¿Desde cuándo estudias costumbres humanas?</div>
+<p>Gabriel inclinó apenas el rostro, casi divertido.</p>
+<div class="pull-quote">— Desde que dejaron de ser previsibles.</div>
+<p>Raphael asintió un poco volviendo su vista hacia unas aves que volaban de manera "desorganizada" arriba de ellos.</p>
+<div class="pull-quote">— Ellos sienten antes de analizar, suelen ser impulsivos.</div>
+<div class="pull-quote">— Es desorganizado.</div>
+<div class="pull-quote">— Son libres —corrigió.</div>
+<p>Michael no replicó, pero su silencio ya no era muro. Era procesamiento y una pequeña puerta entreabierta a sus hermanos. Gabriel dio un pequeño paso hacia la pendiente que descendía hacia el bosque.</p>
+<div class="pull-quote">— Tu residencia está a cuatro kilómetros de aquí —indicó—. Vehículo incluido, ahí encontrarás documentación digital activa, y tu nombre humano responde a Michael MorningStar.</div>
+<p>Raphael alzó una ceja apenas.</p>
+<div class="pull-quote">— No fueron sutiles.</div>
+<div class="pull-quote">— No lo necesitan —respondió Gabriel.</div>
+<div class="pull-quote">— Supongo que nuestros nombres siguen siendo los mismos al igual que lazos familiares.</div>
+<p>Gabriel asintió con calma pensando un poco.</p>
+<div class="pull-quote">— Si, las acciones principales recaen en ustedes dos.</div>
+<div>— De reino pasó a empresa, que irónico.</div>
+<p>Michael asintió alejándose unos pasos de ellos mirando hacia el cielo que empezaba a tornarse celeste una vez que el amanecer iba desapareciendo.</p>
+<div class="pull-quote">— No estamos en el cielo —Repitió Raphael.</div>
+<div class="pull-quote">— El consejo siempre observa —Tensó ligeramente los hombros.</div>
+<p>Gabriel y Raphael compartieron una mirada rápida sin juicio hacia Michael.</p>
+<div class="pull-quote">— No te aísles.</div>
+<p>Michael volvió su vista hacia Raphael una vez más, por primera vez en su descenso, Michael se permitió relajar la rigidez de su postura, una pequeña sonrisa que no llegaba a sus ojos. Raphael y Gabriel lo miraron antes de asentir, como si eso fuera suficiente.</p>
+<p>Michael avanzó hacia el umbral, sabiendo que, por primera vez en milenios, su estrategia no dependería de órdenes celestiales... sino de decisiones propias.</p>
+<p>Y eso, más que la gravedad o la sangre roja, era lo que realmente lo desestabilizaba.</p>
+    </div>
+
+    <!-- CHAPTER NAV -->
+    <nav class="chapter-nav">
+      <a href="cap1_fragmentos.html" class="chap-nav-btn">← El Primer Descenso</a>
+      <a href="FragmentosDeLuz.html" class="btn-home">✦ Índice</a>
+      <a href="cap3_fragmentos.html" class="chap-nav-btn">Esencia de Oro →</a>
+    </nav>
+  </article>
+
+  <script>
+  /* STARS */
+  (function(){
+    const c=document.getElementById('stars-canvas'),ctx=c.getContext('2d');
+    let W,H,s=[];
+    function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+    function mk(n){s=Array.from({length:n},()=>{
+      return {x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.3,
+        a:Math.random(),sp:0.005+Math.random()*0.007,ph:Math.random()*Math.PI*2,
+        col:Math.random()>0.75?'rgba(168,216,240,':'rgba(230,245,255,'};
+    });}
+    function draw(){
+      ctx.clearRect(0,0,W,H);const t=Date.now()*0.001;
+      s.forEach(p=>{
+        const a=p.a*(0.45+0.55*Math.sin(t*p.sp*10+p.ph));
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=p.col+a+')';ctx.fill();
+        if(p.r>1.1&&a>0.5){
+          ctx.strokeStyle=p.col+(a*0.32)+')';ctx.lineWidth=0.5;
+          ctx.beginPath();ctx.moveTo(p.x-p.r*2.5,p.y);ctx.lineTo(p.x+p.r*2.5,p.y);
+          ctx.moveTo(p.x,p.y-p.r*2.5);ctx.lineTo(p.x,p.y+p.r*2.5);ctx.stroke();
+        }
+      });
+      requestAnimationFrame(draw);
+    }
+    resize();mk(180);draw();
+    window.addEventListener('resize',()=>{resize();mk(180);});
+  })();
+
+  /* PROGRESS + BACK TO TOP */
+  window.addEventListener('scroll',()=>{
+    const s=window.scrollY,d=document.documentElement.scrollHeight-window.innerHeight;
+    document.getElementById('progress-bar').style.width=(d>0?(s/d)*100:0)+'%';
+    document.getElementById('back-top').classList.toggle('visible',s>300);
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>El Primer Descenso — Fragmentos de Luz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --black:#03050a;--deep:#070a12;--charcoal:#0d1220;--slate:#1c2a40;
+      --steel:#2e4060;--mist:#7a90b0;--silver:#b0c4de;--moonwhite:#dce8f5;
+      --white:#f0f6ff;--blue:#4a90d9;--blue-dim:#2e6aab;--blue-glow:#6fb3f5;
+      --font-body:'Playfair Display',Georgia,serif;
+      --font-label:'Cinzel',Arial,sans-serif;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--black);color:var(--moonwhite);font-family:var(--font-body);overflow-x:hidden;}
+    ::-webkit-scrollbar{width:5px;}
+    ::-webkit-scrollbar-track{background:var(--deep);}
+    ::-webkit-scrollbar-thumb{background:var(--blue-dim);}
+
+    /* PROGRESS */
+    #progress-bar{
+      position:fixed;top:0;left:0;height:3px;width:0%;
+      background:linear-gradient(to right,var(--blue-dim),var(--blue-glow),var(--silver));
+      z-index:9999;transition:width 0.08s linear;
+      box-shadow:0 0 10px rgba(111,179,245,0.8),0 0 22px rgba(111,179,245,0.35);
+    }
+
+    /* BACK TO TOP */
+    #back-top{
+      position:fixed;bottom:2.2rem;right:2.2rem;width:48px;height:48px;
+      background:#070a12;border:1.5px solid var(--blue);
+      color:var(--moonwhite);font-size:1rem;display:flex;align-items:center;
+      justify-content:center;cursor:pointer;z-index:500;opacity:0;
+      transform:translateY(20px);transition:opacity 0.4s,transform 0.4s,box-shadow 0.3s;
+      text-decoration:none;font-family:var(--font-label);
+    }
+    #back-top.visible{opacity:1;transform:translateY(0);}
+    #back-top:hover{box-shadow:0 0 18px rgba(111,179,245,0.6);background:var(--blue-dim);}
+
+    /* STARS */
+    #stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.55;}
+
+    /* NAV */
+    nav{
+      position:sticky;top:0;z-index:200;
+      background:rgba(3,5,10,0.96);border-bottom:1px solid rgba(74,144,217,0.18);
+      backdrop-filter:blur(14px);
+      display:flex;align-items:center;justify-content:space-between;padding:0.85rem 2.5rem;
+    }
+    .nav-left{display:flex;align-items:center;gap:1.5rem;}
+    .nav-back{
+      font-family:var(--font-label);font-size:0.62rem;letter-spacing:0.28em;
+      text-transform:uppercase;color:var(--mist);text-decoration:none;
+      display:flex;align-items:center;gap:0.5rem;transition:color 0.3s;
+    }
+    .nav-back:hover{color:var(--white);}
+    .nav-sep{color:var(--slate);font-size:0.7rem;}
+    .nav-title{
+      font-family:var(--font-body);font-style:italic;font-size:0.95rem;
+      color:var(--silver);opacity:0.75;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;
+    }
+    .nav-chap{
+      font-family:var(--font-label);font-size:0.6rem;letter-spacing:0.35em;
+      text-transform:uppercase;color:var(--blue);opacity:0.8;
+    }
+
+    /* COVER / PORTADA */
+    #cover{
+      position:relative;height:52vh;min-height:340px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      overflow:hidden;z-index:1;
+    }
+    .cover-bg{
+      position:absolute;inset:0;
+      background:radial-gradient(ellipse at 50% 0%,rgba(28,65,140,0.45) 0%,transparent 60%),
+        linear-gradient(180deg,#03050d 0%,#060c1a 50%,#03050d 100%);
+      z-index:0;
+    }
+    .cover-vignette{
+      position:absolute;inset:0;
+      background:radial-gradient(ellipse at 50% 50%,transparent 20%,rgba(2,3,10,0.55) 65%,rgba(2,3,10,0.98) 100%);
+      z-index:1;pointer-events:none;
+    }
+    /* Mini star watermark on cover */
+    .cover-star{
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      z-index:2;pointer-events:none;opacity:0.18;
+      animation:coverStarPulse 5s ease-in-out infinite;
+    }
+    @keyframes coverStarPulse{
+      0%,100%{opacity:0.14;filter:drop-shadow(0 0 10px rgba(111,179,245,0.3));}
+      50%{opacity:0.26;filter:drop-shadow(0 0 24px rgba(111,179,245,0.55));}
+    }
+    .cover-content{
+      position:relative;z-index:3;text-align:center;padding:2rem;
+      animation:coverIn 1.4s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes coverIn{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+    .cover-series{
+      font-family:var(--font-label);font-size:0.6rem;letter-spacing:0.5em;
+      text-transform:uppercase;color:var(--blue);opacity:0.8;margin-bottom:0.8rem;
+    }
+    .cover-num{
+      font-family:var(--font-label);font-size:0.65rem;letter-spacing:0.45em;
+      text-transform:uppercase;color:var(--mist);margin-bottom:0.6rem;opacity:0.75;
+    }
+    .cover-title{
+      font-family:var(--font-body);font-style:italic;font-weight:700;
+      font-size:clamp(2.4rem,6vw,4.2rem);color:var(--white);line-height:1.05;
+      text-shadow:0 2px 30px rgba(1,3,12,0.99),0 0 50px rgba(111,179,245,0.28);
+      margin-bottom:0.5rem;
+    }
+    .cover-subtitle{
+      font-family:var(--font-body);font-style:italic;font-size:0.95rem;
+      color:var(--mist);opacity:0.75;
+    }
+
+    /* READER */
+    #reader{
+      position:relative;z-index:2;
+      max-width:720px;margin:0 auto;
+      padding:4rem 2.5rem 8rem;
+    }
+
+    /* Chapter body */
+    .chapter-body > p:first-child::first-letter{
+      font-family:var(--font-body);font-style:italic;font-weight:700;
+      font-size:4.5rem;line-height:0.75;float:left;
+      margin:0.1em 0.12em 0 0;
+      color:var(--blue-glow);
+      text-shadow:0 0 20px rgba(111,179,245,0.6),0 0 40px rgba(74,144,217,0.3);
+    }
+    .chapter-body p{
+      font-size:1.1rem;line-height:2;color:var(--moonwhite);
+      margin-bottom:1.7rem;font-style:italic;opacity:0.9;
+    }
+    .chapter-body p em{color:var(--blue-glow);font-style:normal;}
+    .scene-break{
+      text-align:center;color:var(--blue);opacity:0.45;
+      margin:2.8rem 0;font-size:0.9rem;letter-spacing:0.7em;
+      font-family:var(--font-label);
+      clear:both;
+    }
+    .pull-quote{
+      border-left:2px solid var(--blue);
+      margin:2.5rem 0;padding:1.2rem 2rem;
+      background:rgba(74,144,217,0.06);
+      font-size:1.15rem;font-style:italic;
+      color:var(--silver);line-height:1.75;
+      clear:both;
+    }
+
+    /* Chapter end */
+    .chapter-end{
+      text-align:center;padding:3.5rem 2rem 1rem;
+      border-top:1px solid rgba(74,144,217,0.15);
+      margin-top:3rem;
+    }
+    .star-row{
+      font-size:1.1rem;color:var(--blue-glow);opacity:0.5;
+      letter-spacing:1rem;margin-bottom:1.2rem;
+      animation:starRowPulse 3s ease-in-out infinite;
+    }
+    @keyframes starRowPulse{0%,100%{opacity:0.35;}50%{opacity:0.7;}}
+    .chapter-end p{
+      font-family:var(--font-body);font-style:italic;
+      color:var(--mist);font-size:0.98rem;line-height:1.85;
+    }
+
+    /* CHAPTER NAV */
+    .chapter-nav{
+      display:flex;justify-content:space-between;align-items:center;
+      margin-top:4rem;padding-top:2rem;
+      border-top:1px solid rgba(74,144,217,0.15);
+      gap:1rem;flex-wrap:wrap;
+    }
+    .chap-nav-btn{
+      font-family:var(--font-label);font-size:0.63rem;letter-spacing:0.25em;
+      text-transform:uppercase;color:var(--mist);background:transparent;
+      border:1px solid rgba(74,144,217,0.25);padding:0.6rem 1.3rem;
+      cursor:pointer;text-decoration:none;transition:all 0.3s;
+      display:flex;align-items:center;gap:0.5rem;
+    }
+    .chap-nav-btn:hover{color:var(--white);border-color:var(--blue);background:rgba(74,144,217,0.1);}
+    .chap-nav-btn.disabled{opacity:0.2;pointer-events:none;}
+    .btn-home{
+      font-family:var(--font-label);font-size:0.63rem;letter-spacing:0.25em;
+      text-transform:uppercase;color:var(--blue-glow);background:transparent;
+      border:1px solid rgba(74,144,217,0.35);padding:0.6rem 1.3rem;
+      cursor:pointer;text-decoration:none;transition:all 0.3s;
+    }
+    .btn-home:hover{color:var(--white);border-color:var(--blue);background:rgba(74,144,217,0.1);}
+
+    @media(max-width:600px){
+      #reader{padding:3rem 1.3rem 6rem;}
+      nav{padding:0.75rem 1.3rem;}
+      .nav-title{display:none;}
+    }
+
+    /* PRELUDE / ARCHIVO */
+    .chapter-prelude {
+      position: relative; z-index: 2;
+      max-width: 720px; margin: 0 auto;
+      padding: 2.8rem 2.5rem 0;
+    }
+    .prelude-header {
+      display: flex; align-items: center; gap: 1rem; margin-bottom: 1.4rem;
+    }
+    .prelude-label {
+      font-family: var(--font-label); font-size: 0.58rem; letter-spacing: 0.55em;
+      text-transform: uppercase; color: var(--blue); opacity: 0.75;
+      flex-shrink: 0;
+    }
+    .prelude-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(to right, rgba(74,144,217,0.35), rgba(74,144,217,0.08));
+    }
+    .prelude-header .prelude-line { background: linear-gradient(to right, rgba(74,144,217,0.08), rgba(74,144,217,0.35)); }
+    .prelude-body {
+      border-left: 2px solid rgba(74,144,217,0.25);
+      padding: 1rem 1.5rem 1rem 1.8rem;
+      background: rgba(74,144,217,0.04);
+      margin-bottom: 1.4rem;
+    }
+    .prelude-text {
+      font-family: var(--font-body); font-style: italic;
+      font-size: 0.97rem; line-height: 1.85;
+      color: var(--mist); opacity: 0.88;
+    }
+    .prelude-text em { color: var(--silver); }
+    .prelude-footer {
+      display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0;
+    }
+    .prelude-footer .prelude-line {
+      background: linear-gradient(to right, rgba(74,144,217,0.08), rgba(74,144,217,0.3));
+    }
+    .prelude-footer .prelude-line:last-child {
+      background: linear-gradient(to left, rgba(74,144,217,0.08), rgba(74,144,217,0.3));
+    }
+    .prelude-close {
+      font-size: 0.7rem; color: var(--blue-glow); opacity: 0.5; flex-shrink: 0;
+      animation: prelClose 4s ease-in-out infinite;
+    }
+    @keyframes prelClose { 0%,100%{opacity:0.35;} 50%{opacity:0.75;} }
+
+    /* Divider between prelude and reader body */
+    .prelude-divider {
+      max-width: 720px; margin: 2.2rem auto 0;
+      display: flex; align-items: center; gap: 1.2rem;
+      padding: 0 2.5rem;
+    }
+    .prelude-divider::before,
+    .prelude-divider::after {
+      content: ""; flex: 1; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(74,144,217,0.22), transparent);
+    }
+    .prelude-divider-star {
+      font-size: 0.65rem; color: var(--blue); opacity: 0.4;
+    }
+
+  </style>
+</head>
+<body>
+  <canvas id="stars-canvas"></canvas>
+  <div id="progress-bar"></div>
+  <a href="#cover" id="back-top" title="Volver arriba">↑</a>
+
+  <nav>
+    <div class="nav-left">
+      <a href="FragmentosDeLuz.html" class="nav-back">← Fragmentos de Luz</a>
+      <span class="nav-sep">|</span>
+      <span class="nav-title">El Primer Descenso</span>
+    </div>
+    <span class="nav-chap">Cap. I</span>
+  </nav>
+
+  <!-- COVER -->
+  <div id="cover">
+    <div class="cover-bg"></div>
+    <div class="cover-vignette"></div>
+    <!-- Mini star watermark -->
+    <svg class="cover-star" width="320" height="420" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="csg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(180,220,255,0.8)"/>
+          <stop offset="100%" stop-color="rgba(74,144,217,0)"/>
+        </radialGradient>
+        <filter id="csf" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="7"/>
+        </filter>
+      </defs>
+      <ellipse cx="200" cy="260" rx="120" ry="145" fill="rgba(74,144,217,0.1)" filter="url(#csf)"/>
+      <path d="M200,18 C204,120 222,222 262,254 L382,258 C276,262 204,280 200,362 C196,280 128,262 18,258 L138,254 C178,222 196,120 200,18 Z" fill="url(#csg)" opacity="0.9"/>
+      <path d="M200,18 C204,120 222,222 262,254 L340,88 C296,196 208,232 200,260 C192,232 104,196 60,88 L138,254 C178,222 196,120 200,18 Z" fill="rgba(190,228,255,0.35)" opacity="0.7"/>
+      <path d="M200,362 C196,280 128,262 18,258 L60,432 C102,326 192,290 200,260 C208,290 298,326 340,432 L382,258 C276,262 204,280 200,362 Z" fill="rgba(190,228,255,0.35)" opacity="0.7"/>
+    </svg>
+    <div class="cover-content">
+      <p class="cover-series">Aeterni · Saga</p>
+      <p class="cover-num">Arlen's File</p>
+      <h1 class="cover-title">El Primer Descenso</h1>
+      <p class="cover-subtitle">Capitulo I</p>
+    </div>
+  </div>
+
+
+  <!-- ARCHIVO / PREÁMBULO -->
+  <div class="chapter-prelude">
+    <div class="prelude-header">
+      <span class="prelude-label">Archivo</span>
+      <div class="prelude-line"></div>
+    </div>
+    <div class="prelude-body">
+      <p class="prelude-text"><em>La primera luz fue dividida en tres. 
+Si una cesa, las restantes se desestabilizan.
+<p> — Artículo uno, Códice del Origen.</em></p>
+    </div>
+    <div class="prelude-footer">
+      <div class="prelude-line"></div>
+      <span class="prelude-close">✦</span>
+      <div class="prelude-line"></div>
+    </div>
+  </div>
+
+  <div class="prelude-divider"><span class="prelude-divider-star">✦</span></div>
+
+  <!-- READER -->
+  <article id="reader">
+    <div class="chapter-body">
+
+          <p>El eco del metal contra sí mismo llenaba el salón de entrenamiento, un estruendo rítmico y familiar que había acompañado durante tanto tiempo su existencia que solía traerle orgullo. 
+Era un ritmo tan preciso, casi musical, que había sido durante eones el latido del Cielo bajo su mando. Cada ángel guerrero que entrenaba en el patio inferior movía la espada como si fuera una extensión natural de su luz. No había titubeos, no había margen de errores.</p>
+<p>Eran perfectos.</p>
+<p>Y sin embargo, Michael no sentía nada.</p>
+<p>Michael, quien yacía recostado en la baranda del balcón de mármol, observaba el despliegue de disciplina que él mismo les había inculcado, una obra maestra que ya permanecía terminada hace tiempo, pero que seguía sintiéndose incompleta. Eran perfectos, brillantes e inteligentes, cada golpe era preciso, cada movimiento calculado, cada orden anticipada, como si todos ellos se trataran de una misma criatura de luz, era gratificante, al menos eso sentía en el pasado. No había emoción ni satisfacción, solo una inquietud demasiado pesada para poder llamarse paz.</p>
+<p>Había sido creado para ello, para dirigir, proteger y vencer.</p>
+<p>El Príncipe del Cielo y de las Milicias Celestiales, el protector eterno, el guerrero invencible. Títulos gloriosos que varios seres desearían poseer, pero hacía mucho que no recordaba la última vez que algo lo había sorprendido.</p>
+<p>La suave brisa rozó sus alas, extendidas apenas lo suficiente para mostrarlas. Desde lo alto, el campo de entrenamiento parecía un tablero de ajedrez perfectamente organizado.</p>
+<p>Era su obra.</p>
+<p>Y también su jaula.</p>
+<div class="pull-quote"> — Demasiado ruido… —murmuró para sí— para tan poco propósito.</div>
+          <p>No era desprecio, mucho menos arrogancia, mas sin embargo era algo difícil de definir. Era un vacío que no dolía, pero que tampoco se marchaba. 
+Su mirar volvió a ascender cuando un grupo de ángeles rescatistas se abrían paso por los cielos, entrenados con el propósito de extraer a los heridos del campo de batalla y sacarlos de el sin ser detectados, realizaban una maniobra impecable antes de desaparecer del campo de vista. 
+Sin emoción.
+Un movimiento distinto al programado cortó el aire a su alrededor, no era estruendoso, era preciso, y Michael lo reconoció antes de verlo. 
+El entrenamiento se detuvo antes de que él lo ordenara, las espadas quedaron suspendidas y las alas eran extendidas con un respeto automático.</p>
+<p> Gabriel.</p>
+<p> El menor de los cuatro, el más puro, el que aún sonreía sin esfuerzo. Su presencia siempre traía paz y tranquilidad, una cualidad inevitable.
+Descendió al centro con calma, los ángeles inclinándose de manera instintiva ante él. Michael enderezó su postura apenas unos instantes, lo suficiente para levantarse de la baranda de mármol y acercarse al contrario.</p>
+          <div class="pull-quote">— Hermano —Saludo Gabriel con una suavidad que no era protocolo.</div>
+          <p>Michael asintio.</p>
+   <div class="pull-quote">— Gabriel.</div>
+          <p>Hubo un silencio pequeño, no incómodo aún, solo suspendido. Gabriel miró hacía en campo, examinando a los ángeles que empezaban a descansar con sus respiraciones aún agitadas por el esfuerzo.</p>
+          <div class="pull-quote">— Han mejorado, se nota tu dedicación.</div>
+  <p>Un pequeño intento para conversar, Michael lo puso al instante. Su postura no cambió, solo lo miro con seriedad asintiendo un poco sin atreverse a preguntar por él, solo volvió a aparecer esa tensión dentro suyo, que pronto causó que desviara su mirada hacia los ángeles.</p>
+  <div class="pull-quote">— Es su deber mejorar —Respondió al final.</div>
+  <p> Demasiado seco, demasiado frío para dirigirse hacia su hermano, parecía que solo hablaba como general en vez de familia. Gabriel bajó la mirada apenas un segundo, sutil, apenas perceptible, pero Michael lo noto. Una pequeña fractura que sabría que luego pesara más que su espada en batalla.</p>
+ <div class="pull-quote">— Padre te ha convocado —Gabriel habló finalmente.</div>
+ <div class="pull-quote">— ¿Solo a mi?</div>
+  <div class="pull-quote">— Solo a ti.</div>
+<p>Michael volvió a sostener la mirada a Gabriel unos segundos, era extraño, quería preguntar un poco más, pero el distanciamiento entre ellos no era fácil de romper.</p>
+<div class="pull-quote">— Te acompañaré hasta las grandes puertas —Añadió Gabriel como si estuviera pidiendo permiso.</div>
+<p>Michael asintió, antes de volver su vista a sus soldados dándoles un pequeño gesto, uno diminuto, pero lo suficientemente claro para que todos captaran la orden. Poco a poco, los ángeles dieron una reverencia en señal de respeto antes de marcharse sin cuestionar de por medio.</p>
+<div class="pull-quote">— Entendido —Respondió empezando a caminar,esperando unos pequeños segundos para que Gabriel le siguiera.</div>
+          <div class="scene-break">✦ · ✦ ────────   ✶   ──────── ✦ · ✦</div>
+<p>Los pasillos celestiales se encontraban silenciosos, iluminados por columnas de oro líquido que vibraban como si poseyeran vida propia; los vitrales a los lados que no solo mostraban historias antiguas, sino también visiones de los querubines que podrían ocurrir a lo largo de la humanidad.
+Michael y Gabriell caminaban a la par, la luz suave reconociendo a sus príncipes.</p>
+<p> Ambos conocían este lugar de memoria. Miles de recuerdos que yacen en estos muros, como si cada pared los hubiera grabado desde la raíz las risas y promesas, los momentos del pasado que continuaban colándose dentro de sus mentes sin pedir permiso, algunos que llenaban sus esencias de nostalgia genuina, mientras que otras preferían ser simplemente olvidadas.</p>
+<p> Las puertas del Salón del Trono se hicieron presentes, su presencia siempre tan imponente, protegiendo y resguardando lo que muchos no podían presenciar. Las grandes puertas se abrieron antes de que llegase a tocarlas, había ocasiones donde la esencia era lo suficientemente digna para tener el derecho a entrar.</p>
+<div class="pull-quote">— Michael —Gabriel se detuvo antes de terminar la frase.</div>
+<p>La mirada de Michael volvió a dirigirse hacia él, su mirar antes serio e impasible, empezó a suavizarse, dándole una pequeña sonrisa mientras colocaba su mano sobre su hombro, un diminuto gesto, controlado y contenido.</p>
+<div class="pull-quote">— Estaré bien —Murmuró con un tono más fraternal— Continua con tu labor.</div>
+<p> El breve gesto cambió un poco la atmósfera de ambos, dejando de ser incómoda por unos segundos. Michael alejo su mano volviendo su vista hacia las puertas, su mirada volvía a ser fría y calculada. Gabriel no continuó, solo asintió devolviendo la sonrisa empezando a alejarse.</p>
+<p>Las puertas se cerraron apenas Michael entró al salón.</p>
+<p>La luz del Creador llenaba todo el lugar con su presencia basta e infinita. El trono no tenía forma física, se expandía y contraía; cambiaba y respiraba. Los coros de los Seraphines rodeaban la presencia divina, sus alas plegadas en una reverencia perfecta, pero cuando presenciaron la esencia de Michael, sus cantos sagrados cesaron.</p>
+<p>Michael avanzaba al centro del salón sin temor alguno. Las miradas de los Seraphines atravesándolo con cada paso que daba, no con hostilidad visible, según ellos, solo era parte del protocolo.
+Evaluaban cada pequeña parte de él, de su esencia. Una costumbre, una supervisión… una confirmación a sus sospechas.</p>
+<p>Michael se arrodilló una vez que estuvo frente al Padre, su cabeza inclinada correctamente al igual que sus alas, que permanecen extendidas en señal de respeto, sumisión y lealtad. El silencio era absoluto, un silencio que no era cómodo; no cuando los Seraphines continuaban juzgando si debían desconfiar o no.</p>
+<div class="pull-quote">— Michael —Su voz llegó más como una verdad que un sonido, una llena de calidez e inmensidad— Hijo mío… Uno de mis Príncipes de mis Cielos.</div>
+<div class="pull-quote">— Padre… —Respondió sin levantar la vista.</div>
+<p>La inquietud de su interior se movió apenas unos segundos.</p>
+<div class="pull-quote">— He sentido tu inquietud.</div>
+<p>No era acusación, tampoco una pregunta. Michael guardó silencio.</p>
+<div class="pull-quote">— Cumples tu deber sin error —Continuo con esa tranquilidad que solo él sabía poseer—. Peleas y proteges, pero la guerra no es tu único origen.</div>
+<p>Las palabras cayeron con suavidad, como una pluma que acariciaba la esencia, una brisa, un rayo de luz cálido y acogedor. Sus alas se relajaron de manera instintiva aunque la tensión continuaba.</p>
+<div class="pull-quote">— Hijo mío, hay cosas que parecen estar enterradas cuando realmente no lo están —Continuó hablando—. El origen no es una condena. Es un eje, un punto donde todo lo bueno y malo cobra vida y sentido.</div>
+<p>Un leve estremecimiento recorrió la sala. Los Seraphines no hablaron, pero su atención estaba dirigida a las palabras del creador y a Michael. No murmuraron ni susurraron, solo observaron con esa seriedad que decía más que una orden.</p>
+<div class="pull-quote">« Obedece. »</div>
+<p>No protestó, tampoco hizo el intento de hacerlo, su atención permaneció puesta en su Padre.</p>
+<div class="pull-quote">— ¿Cual es mi misión? —Pregunto</div>
+<div class="pull-quote">— No desciendes para la guerra, hijo… desciendes para recordar.</div>
+<div class="pull-quote">— ¿Recordar? —Cuestionó en voz baja mientras alzaba la vista.</div>
+<p>El silencio posterior fue breve pero cargado de emociones contradictorias.</p>
+<div class="pull-quote">— Verás lo que ellos observan, sentirás sus miedos y deseos —Continuo—. No lo harás para perderte, sino para comprender. Ya que hay luces que desconocen su propio brillo hasta que alguien las observa sin juicio.</div>
+<p>Una luz empezaba a abrirse paso entre Michael y el trono, de ella, una cascada de agua cristalina empezaba a formarse y a caer con grandeza, dentro de ella, una imagen, no una amenaza, no la oscuridad.</p>
+<p>Un reflejo.</p>
+<p>Un reflejo humano, frágil y vivo.</p>
+<div class="pull-quote">— El pasado no se borra. Se integra. Y aquello que fue una herida… puede convertirse en guía —añadió Él con serenidad— Todo nuevo comienzo empieza del sacrificio.</div>
+<p>Michael empezó a acercarse a la cascada con cautela, su mano rozó ligeramente aquella agua que descendía; permaneció tibia, no reclamaba, solo llamaba.</p>
+<div class="pull-quote">— Obedeceré.</div>
+<div class="pull-quote">—No es obediencia lo que busco de ti —respondió la voz, suavemente—. Es presencia.</div>
+<p>La agua cristalina empezaba a envolver a Michael poco a poco, rodeándolo como un abrazo cálido y fraternal.</p>
+<div class="pull-quote">—Recuerda, Michael… incluso aquello que tiembla antes de brillar, <em>posee oro en su esencia.</em></div>
+    </div>
+
+    <!-- CHAPTER NAV -->
+    <nav class="chapter-nav">
+      <span class="chap-nav-btn disabled">← Capítulo anterior</span>
+      <a href="FragmentosDeLuz.html" class="btn-home">✦ Índice</a>
+      <a href="cap2_fragmentos.html" class="chap-nav-btn">Mundo Lejano →</a>
+    </nav>
+  </article>
+
+  <script>
+  /* STARS */
+  (function(){
+    const c=document.getElementById('stars-canvas'),ctx=c.getContext('2d');
+    let W,H,s=[];
+    function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+    function mk(n){s=Array.from({length:n},()=>{
+      return {x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.3,
+        a:Math.random(),sp:0.005+Math.random()*0.007,ph:Math.random()*Math.PI*2,
+        col:Math.random()>0.75?'rgba(168,216,240,':'rgba(230,245,255,'};
+    });}
+    function draw(){
+      ctx.clearRect(0,0,W,H);const t=Date.now()*0.001;
+      s.forEach(p=>{
+        const a=p.a*(0.45+0.55*Math.sin(t*p.sp*10+p.ph));
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=p.col+a+')';ctx.fill();
+        if(p.r>1.1&&a>0.5){
+          ctx.strokeStyle=p.col+(a*0.32)+')';ctx.lineWidth=0.5;
+          ctx.beginPath();ctx.moveTo(p.x-p.r*2.5,p.y);ctx.lineTo(p.x+p.r*2.5,p.y);
+          ctx.moveTo(p.x,p.y-p.r*2.5);ctx.lineTo(p.x,p.y+p.r*2.5);ctx.stroke();
+        }
+      });
+      requestAnimationFrame(draw);
+    }
+    resize();mk(180);draw();
+    window.addEventListener('resize',()=>{resize();mk(180);});
+  })();
+
+  /* PROGRESS + BACK TO TOP */
+  window.addEventListener('scroll',()=>{
+    const s=window.scrollY,d=document.documentElement.scrollHeight-window.innerHeight;
+    document.getElementById('progress-bar').style.width=(d>0?(s/d)*100:0)+'%';
+    document.getElementById('back-top').classList.toggle('visible',s>300);
+  });
+  </script>
+</body>
+</html>
