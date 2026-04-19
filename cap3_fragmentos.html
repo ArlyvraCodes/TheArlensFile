@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Esencia de Oro — Fragmentos de Luz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --black:#03050a;--deep:#070a12;--charcoal:#0d1220;--slate:#1c2a40;
+      --steel:#2e4060;--mist:#7a90b0;--silver:#b0c4de;--moonwhite:#dce8f5;
+      --white:#f0f6ff;--blue:#4a90d9;--blue-dim:#2e6aab;--blue-glow:#6fb3f5;
+      --font-body:'Playfair Display',Georgia,serif;
+      --font-label:'Cinzel',Arial,sans-serif;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--black);color:var(--moonwhite);font-family:var(--font-body);overflow-x:hidden;}
+    ::-webkit-scrollbar{width:5px;}
+    ::-webkit-scrollbar-track{background:var(--deep);}
+    ::-webkit-scrollbar-thumb{background:var(--blue-dim);}
+
+    /* PROGRESS */
+    #progress-bar{
+      position:fixed;top:0;left:0;height:3px;width:0%;
+      background:linear-gradient(to right,var(--blue-dim),var(--blue-glow),var(--silver));
+      z-index:9999;transition:width 0.08s linear;
+      box-shadow:0 0 10px rgba(111,179,245,0.8),0 0 22px rgba(111,179,245,0.35);
+    }
+
+    /* BACK TO TOP */
+    #back-top{
+      position:fixed;bottom:2.2rem;right:2.2rem;width:48px;height:48px;
+      background:#070a12;border:1.5px solid var(--blue);
+      color:var(--moonwhite);font-size:1rem;display:flex;align-items:center;
+      justify-content:center;cursor:pointer;z-index:500;opacity:0;
+      transform:translateY(20px);transition:opacity 0.4s,transform 0.4s,box-shadow 0.3s;
+      text-decoration:none;font-family:var(--font-label);
+    }
+    #back-top.visible{opacity:1;transform:translateY(0);}
+    #back-top:hover{box-shadow:0 0 18px rgba(111,179,245,0.6);background:var(--blue-dim);}
+
+    /* STARS */
+    #stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.55;}
+
+    /* NAV */
+    nav{
+      position:sticky;top:0;z-index:200;
+      background:rgba(3,5,10,0.96);border-bottom:1px solid rgba(74,144,217,0.18);
+      backdrop-filter:blur(14px);
+      display:flex;align-items:center;justify-content:space-between;padding:0.85rem 2.5rem;
+    }
+    .nav-left{display:flex;align-items:center;gap:1.5rem;}
+    .nav-back{
+      font-family:var(--font-label);font-size:0.62rem;letter-spacing:0.28em;
+      text-transform:uppercase;color:var(--mist);text-decoration:none;
+      display:flex;align-items:center;gap:0.5rem;transition:color 0.3s;
+    }
+    .nav-back:hover{color:var(--white);}
+    .nav-sep{color:var(--slate);font-size:0.7rem;}
+    .nav-title{
+      font-family:var(--font-body);font-style:italic;font-size:0.95rem;
+      color:var(--silver);opacity:0.75;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;
+    }
+    .nav-chap{
+      font-family:var(--font-label);font-size:0.6rem;letter-spacing:0.35em;
+      text-transform:uppercase;color:var(--blue);opacity:0.8;
+    }
+
+    /* COVER / PORTADA */
+    #cover{
+      position:relative;height:52vh;min-height:340px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      overflow:hidden;z-index:1;
+    }
+    .cover-bg{
+      position:absolute;inset:0;
+      background:radial-gradient(ellipse at 50% 0%,rgba(28,65,140,0.45) 0%,transparent 60%),
+        linear-gradient(180deg,#03050d 0%,#060c1a 50%,#03050d 100%);
+      z-index:0;
+    }
+    .cover-vignette{
+      position:absolute;inset:0;
+      background:radial-gradient(ellipse at 50% 50%,transparent 20%,rgba(2,3,10,0.55) 65%,rgba(2,3,10,0.98) 100%);
+      z-index:1;pointer-events:none;
+    }
+    /* Mini star watermark on cover */
+    .cover-star{
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      z-index:2;pointer-events:none;opacity:0.18;
+      animation:coverStarPulse 5s ease-in-out infinite;
+    }
+    @keyframes coverStarPulse{
+      0%,100%{opacity:0.14;filter:drop-shadow(0 0 10px rgba(111,179,245,0.3));}
+      50%{opacity:0.26;filter:drop-shadow(0 0 24px rgba(111,179,245,0.55));}
+    }
+    .cover-content{
+      position:relative;z-index:3;text-align:center;padding:2rem;
+      animation:coverIn 1.4s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes coverIn{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+    .cover-series{
+      font-family:var(--font-label);font-size:0.6rem;letter-spacing:0.5em;
+      text-transform:uppercase;color:var(--blue);opacity:0.8;margin-bottom:0.8rem;
+    }
+    .cover-num{
+      font-family:var(--font-label);font-size:0.65rem;letter-spacing:0.45em;
+      text-transform:uppercase;color:var(--mist);margin-bottom:0.6rem;opacity:0.75;
+    }
+    .cover-title{
+      font-family:var(--font-body);font-style:italic;font-weight:700;
+      font-size:clamp(2.4rem,6vw,4.2rem);color:var(--white);line-height:1.05;
+      text-shadow:0 2px 30px rgba(1,3,12,0.99),0 0 50px rgba(111,179,245,0.28);
+      margin-bottom:0.5rem;
+    }
+    .cover-subtitle{
+      font-family:var(--font-body);font-style:italic;font-size:0.95rem;
+      color:var(--mist);opacity:0.75;
+    }
+
+    /* READER */
+    #reader{
+      position:relative;z-index:2;
+      max-width:720px;margin:0 auto;
+      padding:4rem 2.5rem 8rem;
+    }
+
+    /* Chapter body */
+    .chapter-body > p:first-child::first-letter{
+      font-family:var(--font-body);font-style:italic;font-weight:700;
+      font-size:4.5rem;line-height:0.75;float:left;
+      margin:0.1em 0.12em 0 0;
+      color:var(--blue-glow);
+      text-shadow:0 0 20px rgba(111,179,245,0.6),0 0 40px rgba(74,144,217,0.3);
+    }
+    .chapter-body p{
+      font-size:1.1rem;line-height:2;color:var(--moonwhite);
+      margin-bottom:1.7rem;font-style:italic;opacity:0.9;
+    }
+    .chapter-body p em{color:var(--blue-glow);font-style:normal;}
+    .scene-break{
+      text-align:center;color:var(--blue);opacity:0.45;
+      margin:2.8rem 0;font-size:0.9rem;letter-spacing:0.7em;
+      font-family:var(--font-label);
+      clear:both;
+    }
+    .pull-quote{
+      border-left:2px solid var(--blue);
+      margin:2.5rem 0;padding:1.2rem 2rem;
+      background:rgba(74,144,217,0.06);
+      font-size:1.15rem;font-style:italic;
+      color:var(--silver);line-height:1.75;
+      clear:both;
+    }
+
+    /* Chapter end */
+    .chapter-end{
+      text-align:center;padding:3.5rem 2rem 1rem;
+      border-top:1px solid rgba(74,144,217,0.15);
+      margin-top:3rem;
+    }
+    .star-row{
+      font-size:1.1rem;color:var(--blue-glow);opacity:0.5;
+      letter-spacing:1rem;margin-bottom:1.2rem;
+      animation:starRowPulse 3s ease-in-out infinite;
+    }
+    @keyframes starRowPulse{0%,100%{opacity:0.35;}50%{opacity:0.7;}}
+    .chapter-end p{
+      font-family:var(--font-body);font-style:italic;
+      color:var(--mist);font-size:0.98rem;line-height:1.85;
+    }
+
+    /* CHAPTER NAV */
+    .chapter-nav{
+      display:flex;justify-content:space-between;align-items:center;
+      margin-top:4rem;padding-top:2rem;
+      border-top:1px solid rgba(74,144,217,0.15);
+      gap:1rem;flex-wrap:wrap;
+    }
+    .chap-nav-btn{
+      font-family:var(--font-label);font-size:0.63rem;letter-spacing:0.25em;
+      text-transform:uppercase;color:var(--mist);background:transparent;
+      border:1px solid rgba(74,144,217,0.25);padding:0.6rem 1.3rem;
+      cursor:pointer;text-decoration:none;transition:all 0.3s;
+      display:flex;align-items:center;gap:0.5rem;
+    }
+    .chap-nav-btn:hover{color:var(--white);border-color:var(--blue);background:rgba(74,144,217,0.1);}
+    .chap-nav-btn.disabled{opacity:0.2;pointer-events:none;}
+    .btn-home{
+      font-family:var(--font-label);font-size:0.63rem;letter-spacing:0.25em;
+      text-transform:uppercase;color:var(--blue-glow);background:transparent;
+      border:1px solid rgba(74,144,217,0.35);padding:0.6rem 1.3rem;
+      cursor:pointer;text-decoration:none;transition:all 0.3s;
+    }
+    .btn-home:hover{color:var(--white);border-color:var(--blue);background:rgba(74,144,217,0.1);}
+
+    @media(max-width:600px){
+      #reader{padding:3rem 1.3rem 6rem;}
+      nav{padding:0.75rem 1.3rem;}
+      .nav-title{display:none;}
+    }
+
+    /* PRELUDE / ARCHIVO */
+    .chapter-prelude {
+      position: relative; z-index: 2;
+      max-width: 720px; margin: 0 auto;
+      padding: 2.8rem 2.5rem 0;
+    }
+    .prelude-header {
+      display: flex; align-items: center; gap: 1rem; margin-bottom: 1.4rem;
+    }
+    .prelude-label {
+      font-family: var(--font-label); font-size: 0.58rem; letter-spacing: 0.55em;
+      text-transform: uppercase; color: var(--blue); opacity: 0.75;
+      flex-shrink: 0;
+    }
+    .prelude-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(to right, rgba(74,144,217,0.35), rgba(74,144,217,0.08));
+    }
+    .prelude-header .prelude-line { background: linear-gradient(to right, rgba(74,144,217,0.08), rgba(74,144,217,0.35)); }
+    .prelude-body {
+      border-left: 2px solid rgba(74,144,217,0.25);
+      padding: 1rem 1.5rem 1rem 1.8rem;
+      background: rgba(74,144,217,0.04);
+      margin-bottom: 1.4rem;
+    }
+    .prelude-text {
+      font-family: var(--font-body); font-style: italic;
+      font-size: 0.97rem; line-height: 1.85;
+      color: var(--mist); opacity: 0.88;
+    }
+    .prelude-text em { color: var(--silver); }
+    .prelude-footer {
+      display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0;
+    }
+    .prelude-footer .prelude-line {
+      background: linear-gradient(to right, rgba(74,144,217,0.08), rgba(74,144,217,0.3));
+    }
+    .prelude-footer .prelude-line:last-child {
+      background: linear-gradient(to left, rgba(74,144,217,0.08), rgba(74,144,217,0.3));
+    }
+    .prelude-close {
+      font-size: 0.7rem; color: var(--blue-glow); opacity: 0.5; flex-shrink: 0;
+      animation: prelClose 4s ease-in-out infinite;
+    }
+    @keyframes prelClose { 0%,100%{opacity:0.35;} 50%{opacity:0.75;} }
+
+    /* Divider between prelude and reader body */
+    .prelude-divider {
+      max-width: 720px; margin: 2.2rem auto 0;
+      display: flex; align-items: center; gap: 1.2rem;
+      padding: 0 2.5rem;
+    }
+    .prelude-divider::before,
+    .prelude-divider::after {
+      content: ""; flex: 1; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(74,144,217,0.22), transparent);
+    }
+    .prelude-divider-star {
+      font-size: 0.65rem; color: var(--blue); opacity: 0.4;
+    }
+
+  </style>
+</head>
+<body>
+  <canvas id="stars-canvas"></canvas>
+  <div id="progress-bar"></div>
+  <a href="#cover" id="back-top" title="Volver arriba">↑</a>
+
+  <nav>
+    <div class="nav-left">
+      <a href="FragmentosDeLuz.html" class="nav-back">← Fragmentos de Luz</a>
+      <span class="nav-sep">|</span>
+      <span class="nav-title">Esencia de Oro</span>
+    </div>
+    <span class="nav-chap">Cap. III</span>
+  </nav>
+
+  <!-- COVER -->
+  <div id="cover">
+    <div class="cover-bg"></div>
+    <div class="cover-vignette"></div>
+    <!-- Mini star watermark -->
+    <svg class="cover-star" width="320" height="420" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="csg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(180,220,255,0.8)"/>
+          <stop offset="100%" stop-color="rgba(74,144,217,0)"/>
+        </radialGradient>
+        <filter id="csf" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="7"/>
+        </filter>
+      </defs>
+      <ellipse cx="200" cy="260" rx="120" ry="145" fill="rgba(74,144,217,0.1)" filter="url(#csf)"/>
+      <path d="M200,18 C204,120 222,222 262,254 L382,258 C276,262 204,280 200,362 C196,280 128,262 18,258 L138,254 C178,222 196,120 200,18 Z" fill="url(#csg)" opacity="0.9"/>
+      <path d="M200,18 C204,120 222,222 262,254 L340,88 C296,196 208,232 200,260 C192,232 104,196 60,88 L138,254 C178,222 196,120 200,18 Z" fill="rgba(190,228,255,0.35)" opacity="0.7"/>
+      <path d="M200,362 C196,280 128,262 18,258 L60,432 C102,326 192,290 200,260 C208,290 298,326 340,432 L382,258 C276,262 204,280 200,362 Z" fill="rgba(190,228,255,0.35)" opacity="0.7"/>
+    </svg>
+    <div class="cover-content">
+      <p class="cover-series">Aeterni · Saga</p>
+      <p class="cover-num">Arlen's File</p>
+      <h1 class="cover-title">Esencia de Oro</h1>
+      <p class="cover-subtitle">Capítulo III</p>
+    </div>
+  </div>
+
+
+  <!-- ARCHIVO / PREÁMBULO -->
+  <div class="chapter-prelude">
+    <div class="prelude-header">
+      <span class="prelude-label">Archivo</span>
+      <div class="prelude-line"></div>
+    </div>
+    <div class="prelude-body">
+      <p class="prelude-text"><em>Las almas humanas jamás son idénticas, todas son únicas a su modo.
+<p class="prelude-text"><em>Las blancas resplandecen sin fractura.
+<p class="prelude-text"><em>Las grises vibran con el conflicto.
+<p class="prelude-text"><em>Las negras absorben la luz en vez de reflejarla.
+<p class="prelude-text"><em>Y las rojas… Las rojas ya no pertenecen al cielo.
+<p>— Códice VII. Archivo Mayor de las Virtudes Celestiales.
+</em></p>
+    </div>
+    <div class="prelude-footer">
+      <div class="prelude-line"></div>
+      <span class="prelude-close">✦</span>
+      <div class="prelude-line"></div>
+    </div>
+  </div>
+
+  <div class="prelude-divider"><span class="prelude-divider-star">✦</span></div>
+
+  <!-- READER -->
+  <article id="reader">
+    <div class="chapter-body">
+
+          <p>La residencia. El silencio que permaneció en el lugar era distinto al que Michael estaba acostumbrado. El silencio, no era vacío, era contenido.</p>
+          <p>Se mantuvo durante unos segundos junto a la puerta cerrada, mirando con detenimiento cada detalle de esta residencia, los sensores de movimiento se activaron justo en el instante donde Michael dio unos pasos para seguir investigando, las cálidas luces del pasillo empezaban a iluminar el pasillo principal, dejando que esta misma dejará proyectar unas suaves líneas de luz sobre el piso.</p>
+          <p>El edificio era extenso.</p>
+          <p>Los ventanales que cubren la pared principal dejaban ver la ciudad expandiéndose hacia el horizonte. Lograba ver aquellas luces artificiales —falsas— que comenzaban a apagarse a la llegada del manto del amanecer.</p>
+          <p>Michael permaneció en silencio mientras se colocaba a unos pasos frente a los grandes ventanales, incluso con todas las luces que los humanos habían podido crear, ninguna lograba copiar la belleza que el Altísimo había impuesto en su creación. Podían copiarlo, imitarlo e incluso alegar que son creaciones suyas; cuando la verdad es completamente diferente.</p>
+          <p>Después de unos segundos, alejó su vista del amanecer, viendo nuevamente hacia la residencia que ahora poseía. Cada mueble estaba milimétricamente colocado, cada objeto perfectamente simétrico. Nada parecía haber sido improvisado.</p>
+          <p>Dejaba más que claro que la residencia había sido organizada con antelación, eso no le sorprendía.</p>
+          <p>El cielo rara vez dejaba algo a la zar.</p>
+          <p>Pronto empezó a caminar inspeccionando incluso las paredes del lugar, hasta que las vio, grabados casi invisibles para la percepción humana, que si no se fijaba con la concentración correcta, solo parecían paredes de concreto pulido. Eran líneas delgadas que apenas eran notorias en la superficie que se les rodeaba, pero formaban un patrón antiguo que él reconoció al instante. Sus manos rozaron apenas las inscripciones causando una pequeña pero inconfundible pulsación de energía.</p>
+          <p>Eran protecciones.</p>
+          <p>No ofensivas, pero si defensivas.</p>
+          <p>Sellos que permanecen para impedir el ingreso de entidades oscuras inferiores y mantener la esencia estable dentro de ella. Su mirada siguió observando aquellos trazos familiares, este lugar no estaba diseñado para que la habitaran humanos normales. No, había sido creada para un observador.</p>
+          <p>Como el.</p>
+          <p>Su mirar volvió a dirigirse hacia los ventanales, dejando que su rostro se oscureciera.</p>
+          <div class="pull-quote">« Residuos. »</div>
+          <p>Pensó para sí mismo mirando aquella nube oscura que era invisible para el ojo humano. Incluso a varios metros, quizás kilómetros, aquel contaminante dominaba gran parte de la ciudad sin mostrar tregua a la luz del sol.</p>
+          <p>Michael continuó mirando unos segundos más a través del ventanal antes de apartarse. No poseía su poder, continuaba siendo bloqueado, no podía defender a la humanidad como antes se le habría ordenado. Así que no continuó, primero debía acoplarse a la estructura y funcionamiento del plano mortal.</p>
+          <p>Se dirigió hacia el escritorio ubicado en una de las salas laterales. La superficie de madera oscura estaba despejada, excepto por un ordenador portátil cerrado y una carpeta negra colocada con precisión geométrica en el centro.</p>
+          <p>Mirando dentro de su interior, encontró documentos impresos, tarjetas de identificación y varios registros oficiales.</p>
+          <p>Una identidad humana completa.</p>
+          <p>No cuestiono. Los documentos incluían registros fiscales, contratos laborales y credenciales profesionales. Una estructura administrativa diseñada para resistir cualquier verificación humana. Incluso había acceso a cuentas bancarias, historiales académicos y certificados profesionales que se extendían hacia atrás varios años en el tiempo humano.</p>
+          <p>Una vida entera construida en archivos.</p>
+          <p>Michael cerró la carpeta con calma. El ordenador se activó en cuanto lo abrió, reconociendo la identidad registrada en el sistema. La pantalla mostró múltiples accesos: comunicaciones, calendarios, registros financieros, informes empresariales.</p>
+          <p>Demasiada información.</p>
+          <div class="pull-quote">— No es necesario por ahora—Murmuro para si.</div>
+          <p>No necesitaba administrar la vida humana que el cielo le había impuesto, debía de observar, aprender y adaptarse.</p>
+          <p>Michael apagó la pantalla.</p>
+          <p>Permanecer dentro de la residencia no le proporciona datos útiles. Menos considerando que el residuo espiritual que había percibido desde el ventanal era representativo de la ciudad, entonces la actividad demoníaca estaba ocurriendo a un nivel más extendido de lo que sugerían los informes previos.</p>
+          <p>Necesitaba evaluar el terreno directamente.</p>
+          <p>Se dirigió hacia el vestidor mirando como las prendas estaban organizadas con la misma precisión que el resto del apartamento: trajes oscuros y claros, camisas perfectamente alineadas, abrigos ligeros adecuados para el clima.</p>
+          <p>Suficiente.</p>
+          <p>Tomó las llaves que descansaban sobre una mesa cercana a la puerta y se dirigió hacia la salida principal. Cuando la abrió, el murmullo distante de la ciudad ascendió por el pasillo del edificio.</p>
+          <p>Sonidos humanos, el tráfico, las conversaciones ajenas, los movimientos constantes. Era algo agobiante, pero no se quejó. Michael salió al corredor y la puerta se cerró silenciosamente detrás de él.</p>
+            <p class="scene-break">✦ ·   ·   ✶   ·   · ✦</p>
+          <p>Las calles a su alrededor permanecían sucias, agrietadas por el transcurso del tiempo sobre ellas. Algunas paredes de los edificios yacían con fracturas que atentaban a la reducción del periodo de los edificios si no se cuidaban adecuadamente, terminarían por destruirse.</p>
+          <p>El aire de la ciudad era más denso a nivel de la calle. Los humanos caminaban con esa normalidad fragmentada; manteniéndose distraídos de su alrededor, envueltos en aquellas conversaciones coloquiales, en pantallas luminosas y en sus rutinas impuestas por la monotonía que sus decisiones les habían otorgado.</p>
+          <p>El tráfico avanzaba con un murmullo constante, interrumpido ocasionalmente por el sonido breve de los claxons o el cruce apresurado por el tiempo que algún peatón había calculado mal. Michael no redujo su paso, siguió impasible con su caminar firme y preciso, su atención tampoco se desviaba, se mantenía atento a su alrededor, no hacia las estructuras humanas, sino a aquello que los humanos no podían observar.</p>
+          <p>La ciudad nunca permanecía en silencio, pero los humanos habían dejado de percibir lo que realmente la saturaba.</p>
+          <p>Mientras más adentro de la ciudad se encontraba, una ligera presión dentro del entorno comenzaba a instalarse, una que no era física, pero tampoco imaginaría. Su mente se agudizó percibiendo con la claridad que los humanos habían dejado atrás, un nivel profundo cercano a su propia esencia.</p>
+          <p>Las almas.</p>
+          <p>Las almas no se manifiestan como formas definidas, sino como emanaciones que permanecen adheridas a cada cuerpo humano; cada una revelando lo que las personas negaban ante la sociedad. Algunas permanecían claras, estables; otras, parecían luchar contra sí mismas, vibrando con una irregularidad constante, cuestionando la existencia, sus vidas, el sentido de ellas.</p>
+          <p>Las blancas eran escasas, son aquellas que resplandecen son fracturas y permanecen limpias de interferencias o distorsiones, en la mayoría, de infantes y bebés que apenas empezaban su camino mortal. Michael desvió la mirada al reconocerlos.</p>
+          <p>Las grises dominaban el panorama, algunas con intensidades más profundas que otras; mostrando cada decisión, cada duda, cada pensamiento contradictorio que alteraba su estabilidad. Eran las de reflejo más común actualmente en la humanidad: ni puras ni completamente perdidas, atrapadas en un estado constante de transición</p>
+          <p>Las negras en cambio, no reflejaban la luz, la consumían. Densas y pesadas, como si cada rastro de claridad hubiera sido absorbido desde su interior, dejando solo un cascarón vacío.</p>
+          <p>Y las rojas.</p>
+          <p>El redujo su velocidad apenas pudo percatar una de ellas para analizarla con mayor precisión. No eran numerosas, pero sus presencias eran imposibles de ignorar. Distorsionadas, inestables y ajenas al orden natural del alma humana. No era producto de una evolución interna, sino de una intervención externa… contratos e influencias, una corrupción directa de seres oscuros que no solo habían corrompido el alma humana, sino también se habían apropiado de ella.</p>
+          <p>No pertenecían al cielo… y posiblemente nunca podrían regresar a él.</p>
+          <p>Su mandíbula se tensó apenas, un gesto mínimo que no alteró su compostura. El peso de la ciudad no era únicamente ambiental, también lo era de manera  espiritual. Y, sin embargo, los humanos continuaban avanzando a su alrededor con una normalidad casi mecánica. No ignoraban la presión… simplemente habían aprendido a coexistir con ella hasta dejar de cuestionarla.</p>
+          <p>Michael no intervino. No aún.</p>
+          <p>Continuó su trayecto con la misma precisión, permitiendo que el flujo de información se asentará en su mente sin emitir juicio inmediato, pero fue entonces cuando algo ligeramente distinto interrumpió su análisis. No provenía de las almas ni del entorno espiritual, sino de algo más… humano.</p>
+          <p>Un aroma.</p>
+          <p>Sutil al inicio, pero lo suficientemente definido como para captar su atención. Cálido, con una mezcla entre dulzura y amargor que no lograba identificar desde la memoria, pero que lograba desviar lo suficiente para girar ligeramente su rostro, intentando averiguar el origen de dicho aroma sin necesidad de detenerse por completo.</p>
+          <p>Una cafetería.</p>
+          <p>El exterior no destacaba en estructura, pero sí en sensación. La presión espiritual era menor en comparación con el resto de la calle, no inexistente, pero contenida. Esa ligera diferencia fue suficiente para que decidiera entrar, la campanilla sobre la puerta sonó al abrirse, marcando su presencia en el interior, donde el ambiente contrastaba de inmediato con el exterior. El murmullo era bajo, contenido, sin la agresividad auditiva de la calle, y el aroma que se intensificaban al mezclarse con otro más antiguo: papel.</p>
+          <p>Libros.</p>
+          <p>Los estantes no estaban organizados para exhibición, sino para uso. Algunos volúmenes estaban ligeramente desplazados, otros abiertos o marcados, evidenciando que no eran simples adornos, sino objetos que habían pasado por múltiples manos.</p>
+          <div class="pull-quote">— No es común ver rostros nuevos a esta hora.</div>
+          <p>La voz lo alcanzó sin brusquedad. Michael giró el rostro con calma, localizando a la mujer detrás del mostrador. Su postura no transmitía desconfianza, tampoco una curiosidad invasiva; había en ella una observación tranquila, casi intuitiva. Sus ojos, aunque marcados por la edad, conservaban una claridad particular, como si percibiera más de lo que correspondía a un humano promedio.</p>
+          <div class="pull-quote">— ¿Primera vez? —añadió con una leve inclinación de cabeza.</div>
+          <div class="pull-quote">— Correcto —respondió Michael sin alterar el tono.</div>
+          <p>La mujer esbozó una sonrisa breve, sin exageración.</p>
+          <div class="pull-quote">— Se nota.</div>
+          <p>No hizo más preguntas. No era necesario.</p>
+          <div class="pull-quote">— Puedes sentarte donde gustes. El café está recién hecho… y los libros no se cobran.</div>
+          <p>Michael asintió levemente antes de avanzar hacia una mesa cercana al ventanal. Desde ahí, la vista de la calle se mantenía clara, permitiendo continuar con su observación sin interrupciones. Se sentó con la misma precisión con la que se había movido desde su llegada, apoyando las manos sobre la superficie de la mesa mientras su atención regresaba al exterior.</p>
+          <p>Las almas seguían fluyendo. Continuando inestables y contradictorias.</p>
+          <p>Un sonido suave lo hizo desviar la mirada apenas: una taza había sido colocada frente a él.</p>
+          <div class="pull-quote">— No pediste nada —dijo la mujer con naturalidad—, pero supongo que esto es un buen inicio.</div>
+          <p>Michael observó el contenido unos segundos antes de responder.</p>
+          <div class="pull-quote">— Gracias —Murmuró manteniendo el tono mirando la taza.</div>
+          <p>Michael tomó la taza, sintiendo el calor recorrer la superficie de sus dedos, una sensación simple, pero común para los humanos. No bebió de inmediato, solo observó el leve movimiento del vapor ascendente mientras su mente continuaba procesando el entorno, haciendo que por primera vez desde su descenso, el silencio que lo rodeaba no era absoluto ni impuesto. Era compartido de una forma que no resultaba… incómodo.</p>
+          <p>La señora no dijo nada más, solo se dispuso a retirarse con la misma sonrisa amable que le dirigió a Michael cuando ingresó. Michael permaneció mirando al exterior de la ventana con esa calma aprendida durante eones atrás, el estado del tiempo era distinto al del cielo, no era el mismo, lo noto por como la luz, la misma con la que durante un inicio siempre mantuvo una tuvo conexión, con la que mantenía una familiaridad inquebrantable, aquella que era siempre era tan próspera y etérea, ahora le parecía apresurada, como si ella misma estuviese empujando al siguiente día con una urgencia casi… incómoda.</p>
+          <p> Siguió en silencio mientras continuaba observando, no solo el panorama donde yacía, sino también en las interacciones humanas. Los documentos que el cielo le había proporcionado no servían para adaptarse, no con totalidad. Su análisis prosiguió por un tiempo más hasta que vio como los rayos del sol comenzaban a tornarse rojizos, el atardecer empezaba a llegar, y con ello, su retirada de la cafetería. Se levantó de su asiento manteniendo su postura impecable, dejando su pago y una propina considerada sobre la mesa; no dijo nada al marcharse, sin ruido innecesario, dirigió una última mirada breve al interior del local, no hacia las personas, sino hacia el espacio mismo, como si registrara cada detalle antes de abandonarlo.</p>
+          <p>Al cruzar la puerta, el cambio fue inmediato.</p>
+          <p>La ciudad nocturna no era la misma que cuando reinaba el día. Como el aire, que ahora era frío, incluso denso y pesado, se colaba entre ellos como una capa invisible, como las luces artificiales, que tintineaban cada pocos segundos no ahuyentaba las sombras de la noche. Michael avanzaba sin vacilar a medida que el cielo volvía a tornarse oscuro, la oscuridad no era el problema, sino lo que ocultaba. Sus pasos firmes y constantes no cedieron en ningún momento, su atención no estaba en el entorno físico, sino lo que se deslizaba dentro de él.</p>
+          <p>No necesitaba sus poderes para sentirlos, los humanos aun podía percibirlos, pero se habían hecho tan ignorantes que preferían normalizarlos.</p>
+          <p>No estaba solo.</p>
+          <p>No cuando aquellas sombras empezaban a aparecer, comenzaban a provocar ecos lejanos y distorsionados, eran formas incompletas, criaturas inferiores que no alcanzaban un poder “considerable” para poder obtener un disfraz humano, pero eran molestas. Y lo suficientemente ingenuas e imprudentes para provocarlo.</p>
+          <div class="pull-quote">— ¿Cuánto falta? —Empezó diciendo una de las sombras mientras se acercaba a Michael quien continuaba caminando— ¿Cuánto más tiene que esperar el cielo para que otro de sus príncipes caiga? ¿O acaso ya lo hizo?</div>
+          <p>Michael no se detuvo, continuó caminando como si el ignorarlas fuera lo suficiente para evadir su existencia, como si no merecieran ni siquiera el reconocimiento de su atención, no podía eliminarlas, no aun… y eso, hizo que se volvieran más arrogantes, haciendo que se acercaran más, rodeándolo sin tocarlo, rozando sus propios límites de percepción con una insistencia irritante.</p>
+          <div class="pull-quote">— No eres distinto a él —Continuó otra sombra— Solo te aferras más fuerte… y eso solo hará que duela más cuando cedas.</div>
+          <p>Sus pasos no cedieron, pero algo en el cambio, algo mínimo, casi inexistente. Una tensión apenas perceptible en la forma en cómo sus ojos miraron de reojo a las sombras que continuaban siguiendo, su rigidez volviéndose más firme e autoritaria, en la forma en cómo su respiración comenzaba a cambiar volviéndose extrañamente más lenta, como de alguien que solo está esperando un momento para destruir. El silencio comenzó a sentirse mucho más denso, no por los residuos, sino por su presencia que ya empezaba a admitir que ignorarlas no era suficiente.</p>
+          <p>No porque tuvieran razón.</p>
+          <p>Sino porque sus voces distorsionadas no se callaban.</p>
+          <p>Una presión dentro de sí comenzaba a formarse, una profunda y contenida, como cadenas con un candado que le oprimía de una manera constante e incómoda que le recordaba que no poseía autorización para ejercer su poder. Su paso se ralentizó por apenas un segundo, lo suficiente para que la molestia se colara dentro de su pensamiento.</p>
+          <div class="pull-quote">« Son innecesarios para la existencia. »</div>
+          <p>La conclusión fue inmediata, podía eliminarlas si lograba liberar parte de su poder. Su paso se detuvo por completo cuando la presión se intensificó, sentía como el bloqueo dentro de sí empezaba a fragmentarse, dolía, pero no lo suficiente para detenerlo. Justo en ese instante fue cuando una de las sombras se lanzó contra él, rápida y directa, pero impulsiva.</p>
+          <p>Michael giró apenas lo necesario para interceptarla cuando todo se detuvo.</p>
+          <p>No por él, sino por algo completamente diferente.</p>
+          <p>Las sombras no retrocedieron, pero el avance contra él se detuvo; la reacción no era duda, era reconocimiento. Reconocimiento hacia aquella luz, una no intensa en el sentido humano, una que no era cegadora, pero que era tan distinguible que incluso aunque ya había visto miles, era imposible de ignorar.</p>
+          <p>Un alma dorada.</p>
+          <p>Un resplandor que por un segundo parecía haber detenido al mundo, no era tenue ni mucho menos débil, era estable, cálida, como un rayo de sol que iluminaba su entorno después de una tormenta. No pertenecía a la noche, mucho menos a este lugar. Y por un segundo, la presión de su pecho cedió.</p>
+          <p>Aunque no había desaparecido, se volvió lo suficientemente soportable para que la energía que había permanecido dentro de si se abriera paso por una diminuta fisura, manifestándose con una claridad suficiente. Las sombras más cercanas no tuvieron tiempo para reaccionar, se deshicieron al instante que la luz divina tocó sus cuerpos intangibles, dejando un grito desgarrador antes de desvanecerse en un humo negro sin dejar rastros.</p>
+          <p>Pero no eran todas. Más demonios inferiores, porque eso eran, comenzaron a emerger de las sombras arrastrándose por los límites del entorno, atraídos no por su santidad, sino por el alma dorada. Michael no tardó en reaccionar, girando a la dirección que había visto desaparecer aquella anomalía con mayor velocidad. Tenía una cosa clara, esa alma no debería estar aquí, mucho menos sin protección.</p>
+          <p>Y por lo tanto, tenía que encontrarla primero que aquellas sombras.</p>
+          <p>Su trayectoria no estaba definida, no permanecía en un punto fijo ni emite pulsos constantes como lo hace la mayoría de almas, se desplazaba de manera irregular, como si ella misma tratase de pasar desapercibida en un entorno que claramente no hacía más que resaltar su brillo. Michael avanzó sin detenerse, ajustando la dirección de sus movimientos cada que la luz dejaba verse lo suficiente para identificar su ubicación. No necesitaba verla para encontrarla… podía sentirla.</p>
+          <p>Podía sentir sus ecos, era incompatible con el resto de almas.</p>
+          <p>Y no era el único, las sombras comenzaban a reorganizarse buscando llegar primero a la alma antes que Michael, se estiraban entre callejones, se adherían a muros y superficies como manchas vivas, desplazándose con una velocidad que no correspondía al plano físico mientras entre ellas mismas murmuraban.</p>
+          <div class="pull-quote">— Dorada —Empezó diciendo una sombra estirándose de manera anormal entre los edificios— Hace tiempo que no la vemos.</div>
+          <div class="pull-quote">— Se ha escondido —Continuo otra— Pero ya ha salido de su escondite.</div>
+          <p>No eran voces definidas esta vez. Era algo más bajo, más viscoso, como una especie de risa contenida y fragmentada que no expresaba diversión… sino hambre de corromper lo santo.</p>
+          <p>Michael miró de reojo a los parásitos con cierto disgusto, no solo hacia la forma en cómo se expresaban, sino en cómo el alma dorada no era una simple anomalía, sino un objetivo que llevaba hace tiempo seleccionado. Aceleró el paso cuando la luz volvió a aparecer entre dos estructuras, esta vez más clara, más definida, primero la vio, su alma. Sin rastros de corrupción o fractura visible, estable y completa. No absorbía ni reflejaba la luz de manera irregular, sino completa.</p>
+          <p>Y eso fue suficiente para confirmar que debía protegerla.</p>
+          <p>No estaba sola, una figura se inclinaba hacia ella de una manera tan invasiva que le parecía repugnante. Físicamente portaba una figura humana correcta en proporciones, en postura, incluso en expresión superficial… pero la distorsión estaba ahí, en los bordes, en la forma en que su presencia no terminaba de encajar con el entorno. No era necesario analizar más.</p>
+          <p>Un demonio inferior con traje humano.</p>
+          <p>Michael redujo la distancia restante sin anunciarse. No hubo advertencia o ruido que delatara su presencia hasta el último instante, el instante cuando intervino.</p>
+          <p>Michael se interpuso entre ambos seres con una firmeza que no dejaba espacio para una respuesta violenta. El demonio se detuvo, no por respeto, sino por algo más cercano a la duda y el miedo. Sus ojos que eran demasiado opacos, sin brillo o alma, se fijaron en Michael, midiendo, evaluando. Al principio no había un reconocimiento claro, el demonio no sabía con certeza la identificación del quien tenía delante ¿Realmente era un ángel? ¿Por qué un ángel tiene su poder restringido? La duda viaja por el aire frío entre los dos con una incomodidad evidente, como si su instinto de aquel ser percibiera que aunque aquel ángel tenía su divinidad oculta, eso no significaba que podría salirse con la suya.</p>
+          <p>Michael sostuvo su posición sin inmutarse, el mensaje era más que suficiente.</p>
+          <p>El demonio retrocedió apenas lo suficiente para romper la proximidad entre ambos, mirando con frustración la situación que se presentaba, su figura que ahora permanecía tensa, distorsionaba su propia expresión humana antes de recomponerse.</p>
+          <p>No insistió.</p>
+          <p>Pero eso tampoco significaba que se hubiera ido.</p>
+          <p>Se desvaneció entre las sombras cercanas, uniéndose a las demás presencias que ahora mantenían una cierta distancia, midiendo… esperando que la desprotección del alma dorada volviera a aparecer.</p>
+          <p>Michael no los siguió, se mantuvo inmóvil un poco más antes de girar apenas su rostro, mirando por primera vez la esencia. La luz dorada desapareció de su percepción inmediata y fue sustituida por la forma física que los humanos reconocían. Un cabello rojizo como un atardecer que llegaba hasta su cintura, ojos claros, de un color esmeralda que se mantenían atentos y desorientados por la situación, piel clara que se estremecía cada que una brisa del aire frío se filtraba y una respiración que aunque no era estable, tampoco estaba completamente alterada.</p>
+          <div class="pull-quote">— ¿Se encuentra bien? —preguntó finalmente con una voz neutral y sin carga emocional— No es seguro permanecer aquí.</div>
+          <div class="pull-quote">— S-sí, estoy bien —Tardó unos segundos en responder, aún asimilando la situación.</div>
+          <p>Michael asintió levemente, su atención no estaba en tranquilizarla, estaba en las sombras, que no se habían retirado por completo, se habían escondido… y volverían a aparecer justo cuando él se retirara.</p>
+          <p>Su mirada se desplazó apenas había el dónde de la calle, donde la oscuridad parecía más densa de lo normal. Era una confirmación silenciosa antes de volver a ella.</p>
+          <div class="pull-quote">— No es seguro que estés sola durante la noche —Continuó con la misma calma— Si lo permite, puedo acompañarte hasta tu destino.</div>
+          <p>Ella frunció ligeramente el ceño, miró a sus alrededores viendo aquellas sombras que parecían sonreírle aún en el manto de la noche, ella también podía verlas, solo fingía no hacerlo. Se estremeció apenas vio que una tenía el descaro de reír y saludarle con una sonrisa desgarrada. Su mirar volvió a Michael quien continuaba en silencio, pero desprendía una extraña sensación de calma y protección que no correspondía con la situación que acababa de ocurrir.</p>
+          <div class="pull-quote">— Creo que está bien —Asintió finalmente.</div>
+          <p>Michael no respondió, simplemente le hizo una seña Cortez de que le seguiría el paso.</p>
+          <p>El trayecto, aunque era silencioso, no era incómodo. Michael no hablaba si no era necesario y en ese momento, su atención estaba dividida entre el entorno… y ella.</p>
+          <p>No la miraba directamente, pero la percibía.</p>
+          <p>Cada cierto tiempo su mirada se desviaba apenas hacia las sombras de los edificios detectando movimientos mínimos. No atacarán de nuevo.</p>
+          <p>Cada cierto tiempo su mirada se desviaba apenas hacia las sombras de los edificios detectando movimientos mínimos. No atacarán de nuevo.</p>
+          <p>La presión en su pecho aún lo reprimía, estaba forzando la manifestación de su presencia cada que los residuos intentaban acercarse, ardía, ardía de una forma interna, como una fuego que lo carcomía por dentro. No se doblegó ante la sensación, continuó escoltando al alma dorada hasta que ella finalmente se detuvo.</p>
+          <div class="pull-quote">— Es aquí —Comenzó señalando uno de los departamentos.</div>
+          <p>Michael alzó la vista, observando la estructura frente a ellos con detenimiento, era un edificio común y funcional para los humanos, pero deficiente para un alma como ella. Un alma dorada sin ángel guardián, con un “refugio” sin sellos o protección, sin absolutamente nada que impidiera una intrusión espiritual. No dijo nada, solo asintió mientras volvía su vista hacia ella.</p>
+          <div class="pull-quote">— Gracias —Volvió diciendo con suavidad mientras parecía abrazarse ella misma, una forma de protección inconsciente—. Por lo de hace rato.</div>
+          <p>Él asintió sin responder directamente, esperando a que ella ingresara a su hogar de una forma casi protocolaria hasta que ella cerró la puerta y se dispuso a marcharse.</p>
+          <p>El silencio volvió a reinar, solo siendo interrumpido por el sonido de sus pasos golpeando la acera. Su respiración seguía siendo estable mientras caminaba en dirección a su residencia, pero algo dentro de si no igual.</p>
+          <p>Una vez llegó a su residencia se dispuso a quitarse el abrigo que traía puesto junto al resto de prendas para darse un baño, hasta que vio su reflejo en un espejo cercano, por un instante nada, todo seguía igual… y luego, una línea. Bajo la mirada hacia su torso, mirando aquella cicatriz que el tiempo no era capaz de borrar, de ella salían grietas diminutas que recorrían su torso de manera apenas visible, como una fractura de porcelana, no estaban abiertas, no eran profundas, pero estaban presentes. Un pulso de luz dorada atravesó aquella nueva fisura antes de expandir su brillo al resto de líneas y luego apagarse.</p>
+          <p>Michael frunció el ceño apenas.</p>
+          <div class="pull-quote">— Así que era eso —Murmuró casi para sí mismo— Esto es ineficiente.</div>
+          <p>Era un ardor no físico en su totalidad, sino estructural. Su mano se deslizó por dicha cicatriz y por aquellas fracturas con una lentitud que ocultaba la reacción bajo control inmediato. Su cuerpo no estaba preparado y su poder seguía restringido… y aun así. La presión había disminuido junto a ella.</p>
+          <p>Su mirada volvió a elevarse, dirigiéndose a la dirección donde minutos antes había percibido a aquella alma, estaba registrando y organizando todos sus pensamientos con precisión absoluta. La ciudad ya contaba con una actividad demoniaca extremadamente alta, y seguramente se debía a la existencia de la anomalía de un alma dorada sin protección.</p>
+          <p>Ella era un objetivo, uno que el cielo necesitaba proteger de la oscuridad.</p>
+          <p>Y si el estar junto a ella, lograba hacer que las restricciones de su esencia se deshabiliten, entonces ella sería su misión.</p>
+
+          <div class="chapter-end">
+            <p class="star-row">✦ ✦ ✦</p>
+            <p>Has llegado al final de los capítulos disponibles por ahora.<br>El archivo se actualiza conforme la historia avanza.<br><em>Vuelve pronto — el cielo sigue abriéndose.</em></p>
+          </div>
+    </div>
+
+    <!-- CHAPTER NAV -->
+    <nav class="chapter-nav">
+      <a href="cap2_fragmentos.html" class="chap-nav-btn">← Mundo Lejano</a>
+      <a href="FragmentosDeLuz.html" class="btn-home">✦ Índice</a>
+      <span class="chap-nav-btn disabled">Siguiente capítulo →</span>
+    </nav>
+  </article>
+
+  <script>
+  /* STARS */
+  (function(){
+    const c=document.getElementById('stars-canvas'),ctx=c.getContext('2d');
+    let W,H,s=[];
+    function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+    function mk(n){s=Array.from({length:n},()=>{
+      return {x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.3,
+        a:Math.random(),sp:0.005+Math.random()*0.007,ph:Math.random()*Math.PI*2,
+        col:Math.random()>0.75?'rgba(168,216,240,':'rgba(230,245,255,'};
+    });}
+    function draw(){
+      ctx.clearRect(0,0,W,H);const t=Date.now()*0.001;
+      s.forEach(p=>{
+        const a=p.a*(0.45+0.55*Math.sin(t*p.sp*10+p.ph));
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=p.col+a+')';ctx.fill();
+        if(p.r>1.1&&a>0.5){
+          ctx.strokeStyle=p.col+(a*0.32)+')';ctx.lineWidth=0.5;
+          ctx.beginPath();ctx.moveTo(p.x-p.r*2.5,p.y);ctx.lineTo(p.x+p.r*2.5,p.y);
+          ctx.moveTo(p.x,p.y-p.r*2.5);ctx.lineTo(p.x,p.y+p.r*2.5);ctx.stroke();
+        }
+      });
+      requestAnimationFrame(draw);
+    }
+    resize();mk(180);draw();
+    window.addEventListener('resize',()=>{resize();mk(180);});
+  })();
+
+  /* PROGRESS + BACK TO TOP */
+  window.addEventListener('scroll',()=>{
+    const s=window.scrollY,d=document.documentElement.scrollHeight-window.innerHeight;
+    document.getElementById('progress-bar').style.width=(d>0?(s/d)*100:0)+'%';
+    document.getElementById('back-top').classList.toggle('visible',s>300);
+  });
+  </script>
+</body>
+</html>
